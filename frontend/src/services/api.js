@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5001/api';
+const BASE_URL = 'https://trustellix-backend.onrender.com/api';
 
 export async function runVerification(text) {
   const response = await fetch(`${BASE_URL}/verify`, {
