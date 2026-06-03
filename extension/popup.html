@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trustellix</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f4f0;
+      color: #0f0f0d;
+    }
+
+    .header {
+      background: #0f0f0d;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-box {
+      width: 26px; height: 26px;
+      background: #e8440a;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-box svg { display: block; }
+
+    .header-text h1 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f5f4f0;
+      letter-spacing: -0.01em;
+    }
+
+    .header-text p {
+      font-size: 10px;
+      color: #6b6860;
+      letter-spacing: 0.04em;
+      margin-top: 1px;
+    }
+
+    .status-bar {
+      background: #1a7a4a;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #5dd49a;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .status-bar span {
+      font-size: 11px;
+      color: #e8f5ee;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .section {
+      padding: 16px 18px;
+      border-bottom: 1px solid #e2e0d8;
+    }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: #a09d97;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .legend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      min-width: 80px;
+    }
+
+    .legend-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+
+    .green { background: #e8f5ee; color: #1a7a4a; border: 1px solid #b7dfca; }
+    .green .legend-dot { background: #1a7a4a; }
+    .yellow { background: #fff8e6; color: #c47d00; border: 1px solid #f0d080; }
+    .yellow .legend-dot { background: #c47d00; }
+    .red { background: #fef0ed; color: #c42b0a; border: 1px solid #f5b8a8; }
+    .red .legend-dot { background: #c42b0a; }
+
+    .legend-desc {
+      font-size: 11px;
+      color: #6b6860;
+      line-height: 1.5;
+      padding-top: 2px;
+    }
+
+    .sites-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .site-chip {
+      padding: 5px 8px;
+      background: white;
+      border: 1px solid #e2e0d8;
+      border-radius: 5px;
+      font-size: 10px;
+      color: #6b6860;
+      text-align: center;
+    }
+
+    .footer {
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer a {
+      font-size: 10px;
+      color: #e8440a;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .version {
+      font-size: 10px;
+      color: #a09d97;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-box">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+        stroke="white" stroke-width="2.5">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Trustellix</h1>
+      <p>TRUST-AS-A-SERVICE ENGINE</p>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>ACTIVE — Scanning this page</span>
+  </div>
+
+  <div class="section">
+    <div class="section-label">What the badges mean</div>
+
+    <div class="legend-item">
+      <div class="legend-badge green">
+        <div class="legend-dot"></div> VERIFIED
+      </div>
+      <div class="legend-desc">
+        Established domain, clean infrastructure, no threat signals.
+      </div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-badge yellow">
+        <div class="legend-dot"></div> UNVERIFIED
+      </div>
+      <div class="legend-desc">
+        New or unknown company. No active scam found. Proceed with caution.
+      </div>
+    </div>
+
+    <div class="legend-item" style="margin-bottom: 0;">
+      <div class="legend-badge red">
+        <div class="legend-dot"></div> HIGH RISK
+      </div>
+      <div class="legend-desc">
+        Active threat signals detected. Do not share personal data.
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Active on these platforms</div>
+    <div class="sites-grid">
+      <div class="site-chip">LinkedIn</div>
+      <div class="site-chip">Jobberman</div>
+      <div class="site-chip">Indeed NG</div>
+      <div class="site-chip">MyJobMag</div>
+      <div class="site-chip">NGCareers</div>
+      <div class="site-chip">+ More soon</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://trustellix.com" target="_blank">trustellix.com</a>
+    <span class="version">v1.0.0</span>
+  </div>
+
+</body>
+</html>
