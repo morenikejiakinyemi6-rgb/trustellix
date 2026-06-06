@@ -5,13 +5,12 @@
   "description": "AI-powered job scam protection for Nigerian graduates.",
   "permissions": ["activeTab", "storage"],
   "host_permissions": [
-    "https://www.linkedin.com/*",
-    "https://ng.linkedin.com/*",
-    "https://www.jobberman.com/*",
-    "https://www.indeed.com/*",
-    "https://ng.indeed.com/*",
-    "https://www.myjobmag.com/*",
-    "https://www.ngcareers.com/*"
+    "https://*.linkedin.com/*",
+    "https://*.jobberman.com/*",
+    "https://*.indeed.com/*",
+    "https://*.myjobmag.com/*",
+    "https://*.ngcareers.com/*",
+    "https://*.hotnigerianjobs.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -19,13 +18,12 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.linkedin.com/*",
-        "https://ng.linkedin.com/*",
-        "https://www.jobberman.com/*",
-        "https://www.indeed.com/*",
-        "https://ng.indeed.com/*",
-        "https://www.myjobmag.com/*",
-        "https://www.ngcareers.com/*"
+        "https://*.linkedin.com/*",
+        "https://*.jobberman.com/*",
+        "https://*.indeed.com/*",
+        "https://*.myjobmag.com/*",
+        "https://*.ngcareers.com/*",
+        "https://*.hotnigerianjobs.com/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"

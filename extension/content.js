@@ -10,28 +10,28 @@ const COLORS = {
 
 const CONFIGS = {
   'linkedin.com': {
-    cards: '.job-card-container',
+    cards: '.jobs-search-results-list__list-item, .job-card-container, .jobs-search-results__list-item',
     title: '.job-card-list__title--link, .job-card-container__link, h3 a, h3',
     company: '.job-card-container__primary-description, .artdeco-entity-lockup__subtitle span',
     description: '.job-card-container__metadata-item',
-    insertAfter: '.job-card-container__primary-description, .artdeco-entity-lockup__subtitle',
-    detailPanel: '[data-view-name="job-details"], .jobs-details, .job-view-layout',
-    detailTitle: 'h1',
-    detailCompany: '.job-details-jobs-unified-top-card__company-name a, .jobs-unified-top-card__company-name a, .t-black--light a',
-    detailDescription: '.jobs-description, .jobs-box__html-content, #job-details, .jobs-description-content',
-    detailInsert: '.job-details-jobs-unified-top-card__primary-description-container, .jobs-unified-top-card__primary-description, .jobs-details-top-card__company-info',
+    insertAfter: '.job-card-container__primary-description, .artdeco-entity-lockup__subtitle, .job-card-list__title',
+    detailPanel: '.jobs-search__job-details, [data-view-name="job-details"], .jobs-details, .job-view-layout',
+    detailTitle: 'h1, h2',
+    detailCompany: '.job-details-jobs-unified-top-card__company-name a, .jobs-unified-top-card__company-name a, .t-black--light a, .jobs-details-top-card__company-url',
+    detailDescription: '.jobs-description__container, .jobs-description, .jobs-box__html-content, #job-details, .jobs-description-content',
+    detailInsert: '.job-details-jobs-unified-top-card__primary-description-container, .jobs-unified-top-card__primary-description, .jobs-details-top-card__company-info, h1',
   },
   'jobberman.com': {
-    cards: 'article.job-card, .job-list-item, .job-card, [class*="job-item"]',
-    title: 'h2, h3, .job-title a, [class*="job-title"]',
-    company: '.company-name, .employer, [class*="company"]',
-    description: '.job-description, .summary, [class*="description"]',
-    insertAfter: '.company-name, .employer, h3, h2',
-    detailPanel: '.job-detail-container, .single-job, .job-detail, [class*="job-detail"]',
-    detailTitle: 'h1, h2.title',
-    detailCompany: '.company-name, .employer-name, [class*="company"]',
-    detailDescription: '.job-description, .description-body, [class*="description"]',
-    detailInsert: '.company-name, .employer-name, h1',
+    cards: 'article.job-card, .job-list-item, .job-card, [class*="job-item"], .flex.flex-col.rounded-md',
+    title: 'h2, h3, .job-title a, [class*="job-title"], a.text-brand-linked',
+    company: '.company-name, .employer, [class*="company"], .text-brand-gray-dark font',
+    description: '.job-description, .summary, [class*="description"], .text-brand-gray',
+    insertAfter: '.company-name, .employer, h3, h2, .text-brand-gray-dark',
+    detailPanel: '.job-overview__summary, .job-detail-container, .single-job, .job-detail, [class*="job-detail"]',
+    detailTitle: 'h1, h2.title, .text-brand-black-dark',
+    detailCompany: '.company-name, .employer-name, [class*="company"], .text-brand-linked-dark',
+    detailDescription: '.job-overview__description, .job-description, .description-body, [class*="description"]',
+    detailInsert: '.job-overview__summary-info, .company-name, .employer-name, h1',
   },
   'ngcareers.com': {
     cards: '.job-item, .job-listing, article',
@@ -337,7 +337,7 @@ async function processDetailPanel(cfg) {
   }
 
   if (!insertTarget) {
-    const fallback = panel.querySelector('h1');
+    const fallback = panel.querySelector('h1, h2');
     if (fallback) insertTarget = fallback;
     else return;
   }
@@ -445,8 +445,8 @@ function init() {
       [...m.addedNodes].some(n =>
         n.nodeType === 1 &&
         (n.classList?.contains(BADGE_CLASS) ||
-         n.classList?.contains('tsx-detail-badge') ||
-         n.querySelector?.('.' + BADGE_CLASS))
+          n.classList?.contains('tsx-detail-badge') ||
+          n.querySelector?.('.' + BADGE_CLASS))
       )
     );
     if (isOwn) return;
