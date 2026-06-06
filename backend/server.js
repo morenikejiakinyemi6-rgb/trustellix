@@ -14,11 +14,7 @@ import quickscanRoute from './routes/quickscan.js';
 
 const app = express();
 
-
-app.use(cors({
-  origin: ['https://trustellix.vercel.app', 'http://localhost:5173'],
-  credentials: true,
-}));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 app.use('/api/verify', verifyRoute);
