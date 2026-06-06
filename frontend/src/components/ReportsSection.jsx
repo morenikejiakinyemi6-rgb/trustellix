@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useHover } from '../hooks/useHover.js';
-import { NAVY, BLUE_L, GREEN, RED, FONT } from '../constants/theme.js';
+import { NAVY, BLUE_L, GREEN, FONT } from '../constants/theme.js';
 
 const REAL_REPORTS = [
   {
@@ -193,7 +193,7 @@ function ReportForm({ onSubmit }) {
   );
 }
 
-function ArrowBtn({ dir, label, onClick }) {
+function ArrowBtn({ dir, onClick }) {
   const [h, hh] = useHover();
   return (
     <button onClick={onClick} {...hh} style={{
@@ -201,12 +201,22 @@ function ArrowBtn({ dir, label, onClick }) {
       border: `1.5px solid ${h ? BLUE_L : '#CBD5E1'}`,
       background: h ? BLUE_L : 'white',
       color: h ? 'white' : '#374151',
-      cursor: 'pointer', fontFamily: FONT,
-      fontSize: '16px', fontWeight: '700',
+      cursor: 'pointer',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       transition: 'all 0.15s',
+      padding: 0,
     }}>
-      {label}
+      {dir === -1 ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      )}
     </button>
   );
 }
@@ -309,8 +319,8 @@ function ReportsCarousel({ userReports }) {
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginTop: '14px', justifyContent: 'flex-end' }}>
-        <ArrowBtn dir={-1} label="←" onClick={() => go(-1)} />
-        <ArrowBtn dir={1} label="→" onClick={() => go(1)} />
+        <ArrowBtn dir={-1} onClick={() => go(-1)} />
+        <ArrowBtn dir={1} onClick={() => go(1)} />
       </div>
     </div>
   );

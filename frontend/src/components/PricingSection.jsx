@@ -154,10 +154,7 @@ function UserPlanCard({ plan }) {
       ))}
 
       {plan.excluded.length > 0 && (
-        <div style={{
-          marginTop: '14px', paddingTop: '14px',
-          borderTop: `1px solid ${plan.highlight ? 'rgba(255,255,255,0.15)' : '#E2E8F0'}`,
-        }}>
+        <div style={{ marginTop: '14px' }}> {/* Removed borderTop line completely here */}
           {plan.excluded.map(f => (
             <div key={f} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-start' }}>
               <span style={{
