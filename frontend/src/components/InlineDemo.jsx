@@ -30,7 +30,7 @@ export default function InlineDemo() {
       const data = await res.json();
       setResult(data);
     } catch {
-      setError('Make sure the Trustellix backend is running on port 5001.');
+      setError('Analysis failed. Please try again in a moment.');
     }
     setLoading(false);
   };
