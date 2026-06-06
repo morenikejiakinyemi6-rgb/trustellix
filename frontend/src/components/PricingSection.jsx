@@ -107,6 +107,7 @@ function UserPlanCard({ plan }) {
         transition: 'box-shadow 0.25s, transform 0.25s',
         transform: h ? 'translateY(-4px)' : 'translateY(0)',
         fontFamily: FONT,
+        boxSizing: 'border-box',
       }}
     >
       {plan.badge && (
@@ -160,14 +161,14 @@ function UserPlanCard({ plan }) {
           {plan.excluded.map(f => (
             <div key={f} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-start' }}>
               <span style={{
-                color: plan.highlight ? 'rgba(255,255,255,0.35)' : '#CBD5E1',
+                color: '#EF4444', 
                 fontWeight: '900', fontSize: '13px', marginTop: '2px', flexShrink: 0,
               }}>✕</span>
               <span style={{
                 fontSize: '14px',
-                color: plan.highlight ? 'rgba(255,255,255,0.4)' : '#94A3B8',
+                color: '#64748B', 
                 lineHeight: '1.5',
-                textDecoration: 'line-through',
+                textDecoration: 'none', 
               }}>
                 {f}
               </span>
@@ -195,8 +196,10 @@ function UserPlanCard({ plan }) {
     </div>
   );
 }
+
 function OrgPlanCard({ plan }) {
   const [h, hh] = useHover();
+  const [btnH, btnHH] = useHover();
 
   return (
     <div
@@ -212,6 +215,7 @@ function OrgPlanCard({ plan }) {
         transform: h ? 'translateY(-4px)' : 'translateY(0)',
         display: 'flex', flexDirection: 'column',
         fontFamily: FONT,
+        boxSizing: 'border-box',
       }}
     >
       <div style={{
@@ -227,7 +231,7 @@ function OrgPlanCard({ plan }) {
           <span style={{ fontSize: '13px', fontWeight: '700', color: plan.highlight ? 'rgba(255,255,255,0.6)' : '#64748B' }}>₦</span>
         )}
         <span style={{ fontSize: '28px', fontWeight: '900', color: plan.highlight ? 'white' : NAVY, letterSpacing: '-0.5px' }}>
-          {' '}{plan.price}
+          {plan.price}
         </span>
       </div>
 
@@ -242,12 +246,29 @@ function OrgPlanCard({ plan }) {
         {plan.target}
       </div>
 
-      {plan.features.map(f => (
+      {plan.included.map(f => (
         <div key={f} style={{ display: 'flex', gap: '9px', marginBottom: '10px', alignItems: 'flex-start' }}>
           <span style={{ color: plan.highlight ? 'white' : GREEN, fontSize: '12px', flexShrink: 0, fontWeight: '900', marginTop: '2px' }}>✓</span>
           <span style={{ fontSize: '13px', color: plan.highlight ? 'rgba(255,255,255,0.85)' : '#374151', lineHeight: '1.5' }}>{f}</span>
         </div>
       ))}
+
+      <button
+        {...btnHH}
+        style={{
+          marginTop: '22px', width: '100%', padding: '12px',
+          borderRadius: '8px',
+          border: plan.highlight ? '1.5px solid rgba(255,255,255,0.3)' : `1.5px solid ${BLUE_L}`,
+          background: plan.highlight
+            ? (btnH ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)')
+            : (btnH ? BLUE_L : 'white'),
+          color: plan.highlight ? 'white' : (btnH ? 'white' : BLUE_L),
+          fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+          fontFamily: FONT, transition: 'all 0.18s',
+        }}
+      >
+        {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+      </button>
     </div>
   );
 }
@@ -288,7 +309,7 @@ export default function PricingSection() {
             Protection for everyone
           </h2>
           <p style={{ fontSize: '16px', color: '#374151', maxWidth: '500px', margin: '0 auto', lineHeight: '1.75', fontFamily: FONT }}>
-             Free protection for every job seeker. Organizations that want verified trust invest in keeping their reputation clean.
+            Free protection for every job seeker. Organizations that want verified trust invest in keeping their reputation clean.
           </p>
         </div>
 
