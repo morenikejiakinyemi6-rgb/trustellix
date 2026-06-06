@@ -86,8 +86,7 @@ function ReportCard({ report }) {
         {report.text}
       </p>
 
-      
-        <a href={report.link}
+      <a href={report.link}
         target="_blank"
         rel="noreferrer"
         {...linkHH}
@@ -194,6 +193,129 @@ function ReportForm({ onSubmit }) {
   );
 }
 
+function ArrowBtn({ dir, label, onClick }) {
+  const [h, hh] = useHover();
+  return (
+    <button onClick={onClick} {...hh} style={{
+      width: '36px', height: '36px', borderRadius: '50%',
+      border: `1.5px solid ${h ? BLUE_L : '#CBD5E1'}`,
+      background: h ? BLUE_L : 'white',
+      color: h ? 'white' : '#374151',
+      cursor: 'pointer', fontFamily: FONT,
+      fontSize: '16px', fontWeight: '700',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      transition: 'all 0.15s',
+    }}>
+      {label}
+    </button>
+  );
+}
+
+function ReportsCarousel({ userReports }) {
+  const [current, setCurrent] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [linkH, linkHH] = useHover();
+
+  const allReports = [...userReports, ...REAL_REPORTS];
+
+  const go = (dir) => {
+    if (animating) return;
+    setAnimating(true);
+    setTimeout(() => {
+      setCurrent(prev => (prev + dir + allReports.length) % allReports.length);
+      setAnimating(false);
+    }, 200);
+  };
+
+  const report = allReports[current];
+
+  return (
+    <div>
+      <div style={{
+        fontSize: '12px', fontWeight: '700', color: '#64748B',
+        marginBottom: '16px', textTransform: 'uppercase',
+        letterSpacing: '0.08em', fontFamily: FONT,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <span>Active Scam Patterns From Real Communities</span>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {allReports.map((_, i) => (
+            <span key={i} onClick={() => setCurrent(i)} style={{
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: i === current ? BLUE_L : '#CBD5E1',
+              cursor: 'pointer', transition: 'background 0.2s', display: 'block',
+            }} />
+          ))}
+        </div>
+      </div>
+
+      <div style={{
+        opacity: animating ? 0 : 1,
+        transform: animating ? 'translateX(20px)' : 'translateX(0)',
+        transition: 'all 0.2s ease',
+      }}>
+        <div style={{
+          background: 'white', borderRadius: '14px', padding: '24px',
+          border: '1.5px solid #CBD5E1', fontFamily: FONT, minHeight: '220px',
+        }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            alignItems: 'flex-start', marginBottom: '14px', flexWrap: 'wrap', gap: '8px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                padding: '4px 10px', background: '#EFF6FF',
+                borderRadius: '6px', border: '1px solid #BFDBFE',
+                fontSize: '12px', fontWeight: '700', color: '#1E40AF',
+              }}>
+                {report.platform}
+              </div>
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '13px', color: NAVY }}>{report.source}</div>
+                <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '1px' }}>{report.time}</div>
+              </div>
+            </div>
+            <span style={{
+              padding: '3px 10px', borderRadius: '20px',
+              background: report.verdictBg, color: report.verdictColor,
+              fontSize: '11px', fontWeight: '800',
+              border: `1px solid ${report.verdictBorder}`,
+              flexShrink: 0,
+            }}>
+              {report.verdict}
+            </span>
+          </div>
+
+          <p style={{ fontSize: '13.5px', color: '#374151', lineHeight: '1.7', margin: '0 0 14px' }}>
+            {report.text}
+          </p>
+
+          {report.link && (
+            <a href={report.link} target="_blank" rel="noreferrer" {...linkHH} style={{
+              fontSize: '13px', color: linkH ? '#1D4ED8' : BLUE_L,
+              textDecoration: linkH ? 'underline' : 'none',
+              fontWeight: '600', display: 'inline-flex',
+              alignItems: 'center', gap: '5px', transition: 'color 0.15s',
+            }}>
+              View community discussion
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', marginTop: '14px', justifyContent: 'flex-end' }}>
+        <ArrowBtn dir={-1} label="←" onClick={() => go(-1)} />
+        <ArrowBtn dir={1} label="→" onClick={() => go(1)} />
+      </div>
+    </div>
+  );
+}
+
 export default function ReportsSection() {
   const [userReports, setUserReports] = useState([]);
 
@@ -252,17 +374,7 @@ export default function ReportsSection() {
           </div>
 
           <div>
-            <div style={{
-              fontSize: '12px', fontWeight: '700', color: '#64748B',
-              marginBottom: '16px', textTransform: 'uppercase',
-              letterSpacing: '0.08em', fontFamily: FONT,
-            }}>
-              Active Scam Patterns — From Real Communities
-            </div>
-
-            {userReports.map(r => <ReportCard key={r.id} report={r} />)}
-
-            {REAL_REPORTS.map(r => <ReportCard key={r.id} report={r} />)}
+            <ReportsCarousel userReports={userReports} />
           </div>
         </div>
       </div>

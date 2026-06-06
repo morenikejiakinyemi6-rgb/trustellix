@@ -8,30 +8,37 @@ const USER_PLANS = [
     price: '0',
     period: 'forever',
     cta: 'Install now, it is free',
-    features: [
+    included: [
       'Chrome extension on LinkedIn and Jobberman',
-      'Safety badge while scrolling, zero clicks',
+      'Safety badge on every listing while scrolling',
       'Basic verdict: Safe, Caution, or High Risk',
-      'Up to 5 manual scans per day',
+      'Access to community scam reports',
+    ],
+    excluded: [
+      'Full AI forensic report with detailed reasoning',
+      'Email and WhatsApp message analysis',
+      'Job alert notifications for your field',
+      'Contract and offer letter red flag scanner',
+      'Scan history saved for 90 days',
     ],
     highlight: false,
-    badge: null,
   },
   {
     name: 'Pro',
     price: '1,500',
     period: 'per month',
     cta: 'Get full protection',
-    features: [
+    included: [
       'Everything in Free',
-      'Deep AI forensic report on any offer, full reasoning',
+      'Full AI forensic report with detailed reasoning',
       'Email and WhatsApp message analysis',
-      'Real time alerts when new jobs in your field post',
+      'Job alert notifications for your field',
       'Contract and offer letter red flag scanner',
       'Unlimited manual scans, no daily cap',
-      'Full scan history, exportable report for references',
+      'Scan history saved for 90 days',
       'Priority support within 24 hours',
     ],
+    excluded: [],
     highlight: true,
     badge: 'Most Popular',
   },
@@ -41,21 +48,22 @@ const ORG_PLANS = [
   {
     name: 'Brand Shield',
     price: '150,000',
-    target: 'Your company name is being used by scammers right now. We stop it.',
-    features: [
-      'Gold Verified badge on every one of your job listings across all platforms',
-      'Instant alerts when a fake listing impersonating your brand is detected',
-      'Monthly report of scam activity using your company name',
+    target: 'Scammers are actively impersonating your brand right now. Lock it down.',
+    included: [
+      'Verified gold badge on all your job listings across every platform',
+      'Instant alerts when a fake listing using your brand is detected',
+      'Monthly report of scam activity targeting your company name',
       'Your domain added to our permanent verified whitelist',
       'Top placement in our verified employer directory',
     ],
+    excluded: [],
     highlight: false,
   },
   {
     name: 'Platform API',
     price: '300,000',
-    target: 'Screen every listing before it goes live. One API call. No engineering team needed.',
-    features: [
+    target: 'Screen every listing before it goes live. One API call replaces an entire fraud team.',
+    included: [
       '50,000 automated listing screenings per month',
       'Verdict returned in under 3 seconds per listing',
       'Full JSON payload: risk score, threat flags, domain data',
@@ -63,19 +71,21 @@ const ORG_PLANS = [
       'Real time threat analytics dashboard',
       'Quarterly threat intelligence report for your market',
     ],
+    excluded: [],
     highlight: true,
   },
   {
     name: 'Enterprise',
     price: 'Custom',
-    target: 'Built around your infrastructure. Any scale, any platform.',
-    features: [
+    target: 'Built around your infrastructure at any scale.',
+    included: [
       'Unlimited API calls with guaranteed uptime SLA',
-      'White label: your brand, our engine',
+      'White label option: your brand, our engine',
       'Custom Nigerian threat model training on your data',
       'Dedicated integration engineer assigned to your team',
       'Legal and compliance documentation package included',
     ],
+    excluded: [],
     highlight: false,
   },
 ];
@@ -99,6 +109,18 @@ function UserPlanCard({ plan }) {
         fontFamily: FONT,
       }}
     >
+      {plan.badge && (
+        <div style={{
+          display: 'inline-block', marginBottom: '12px',
+          padding: '3px 12px', borderRadius: '20px',
+          background: 'rgba(255,255,255,0.2)',
+          fontSize: '11px', fontWeight: '700', color: 'white',
+          letterSpacing: '0.04em',
+        }}>
+          {plan.badge}
+        </div>
+      )}
+
       <div style={{
         fontSize: '12px', fontWeight: '800',
         color: plan.highlight ? 'rgba(255,255,255,0.6)' : '#64748B',
@@ -114,16 +136,45 @@ function UserPlanCard({ plan }) {
         </span>
       </div>
 
-      <div style={{ fontSize: '13px', color: plan.highlight ? 'rgba(255,255,255,0.5)' : '#94A3B8', marginBottom: '28px' }}>
+      <div style={{ fontSize: '13px', color: plan.highlight ? 'rgba(255,255,255,0.5)' : '#94A3B8', marginBottom: '24px' }}>
         {plan.period}
       </div>
 
-      {plan.features.map(f => (
-        <div key={f} style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'flex-start' }}>
-          <span style={{ color: plan.highlight ? 'white' : GREEN, fontWeight: '900', fontSize: '13px', marginTop: '2px', flexShrink: 0 }}>✓</span>
-          <span style={{ fontSize: '14px', color: plan.highlight ? 'rgba(255,255,255,0.85)' : '#374151', lineHeight: '1.5' }}>{f}</span>
+      {plan.included.map(f => (
+        <div key={f} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-start' }}>
+          <span style={{
+            color: plan.highlight ? 'white' : GREEN,
+            fontWeight: '900', fontSize: '13px', marginTop: '2px', flexShrink: 0,
+          }}>✓</span>
+          <span style={{ fontSize: '14px', color: plan.highlight ? 'rgba(255,255,255,0.85)' : '#374151', lineHeight: '1.5' }}>
+            {f}
+          </span>
         </div>
       ))}
+
+      {plan.excluded.length > 0 && (
+        <div style={{
+          marginTop: '14px', paddingTop: '14px',
+          borderTop: `1px solid ${plan.highlight ? 'rgba(255,255,255,0.15)' : '#E2E8F0'}`,
+        }}>
+          {plan.excluded.map(f => (
+            <div key={f} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-start' }}>
+              <span style={{
+                color: plan.highlight ? 'rgba(255,255,255,0.35)' : '#CBD5E1',
+                fontWeight: '900', fontSize: '13px', marginTop: '2px', flexShrink: 0,
+              }}>✕</span>
+              <span style={{
+                fontSize: '14px',
+                color: plan.highlight ? 'rgba(255,255,255,0.4)' : '#94A3B8',
+                lineHeight: '1.5',
+                textDecoration: 'line-through',
+              }}>
+                {f}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <button
         {...btnHH}
@@ -144,7 +195,6 @@ function UserPlanCard({ plan }) {
     </div>
   );
 }
-
 function OrgPlanCard({ plan }) {
   const [h, hh] = useHover();
 
@@ -238,7 +288,7 @@ export default function PricingSection() {
             Protection for everyone
           </h2>
           <p style={{ fontSize: '16px', color: '#374151', maxWidth: '500px', margin: '0 auto', lineHeight: '1.75', fontFamily: FONT }}>
-            Free for job seekers, always. We charge organizations that benefit most from keeping their reputation clean.
+             Free protection for every job seeker. Organizations that want verified trust invest in keeping their reputation clean.
           </p>
         </div>
 

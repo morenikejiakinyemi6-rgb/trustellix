@@ -79,15 +79,26 @@ export default function InstallModal({ onClose }) {
         ))}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '28px' }}>
-          <button {...dlHH} style={{
-            flex: 1, padding: '13px',
-            background: dlH ? '#1D4ED8' : BLUE_L,
-            color: 'white', border: 'none', borderRadius: '8px',
-            fontWeight: '700', fontSize: '14px', cursor: 'pointer',
-            fontFamily: FONT, transition: 'background 0.18s',
-          }}>
-            Download from GitHub
-          </button>
+          <a href="https://github.com/morenikejiakinyemi6-rgb/trustellix/archive/refs/heads/main.zip"
+  download
+  style={{
+    flex: 1, padding: '13px',
+    background: dlH ? '#1D4ED8' : BLUE_L,
+    color: 'white', border: 'none', borderRadius: '8px',
+    fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+    fontFamily: FONT, transition: 'background 0.18s',
+    textDecoration: 'none', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', gap: '8px',
+  }}
+  {...dlHH}
+>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+    <polyline points="8 17 12 21 16 17"/>
+    <line x1="12" y1="12" x2="12" y2="21"/>
+    <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>
+  </svg>
+  Download Extension
+</a>
           <button onClick={onClose} {...closeHH} style={{
             padding: '13px 20px',
             background: closeH ? '#F1F5F9' : 'white',
