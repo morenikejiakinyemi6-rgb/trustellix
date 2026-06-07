@@ -375,10 +375,10 @@ function createCompactBadge(verdict, riskScore, reasons, summary) {
   return wrap;
 }
 
-async function callScan(text, companyName) {
+async function callScan(text, companyName, fullScan) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(
-      { type: 'SCAN_JOB', text, companyName },
+      { type: 'SCAN_JOB', text, companyName, fullScan: fullScan || false },
       (res) => {
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
         if (!res) return reject(new Error('No response'));
@@ -457,7 +457,7 @@ async function processDetailPanel(cfg) {
   insertTarget.insertAdjacentElement('afterend', loading);
 
   try {
-    const result = await callScan(combined, company);
+    const result = await callScan(combined, company, true);
     loading.remove();
     detailScanning = false;
 
@@ -555,6 +555,11 @@ function init() {
   if (!cfgObj) return;
 
   addFloatingIndicator();
+  setInterval(() => {
+  chrome.runtime.sendMessage({ type: 'PING' }, () => {
+    if (chrome.runtime.lastError) { /* service worker woke up */ }
+  });
+}, 25000);
 
   setTimeout(() => scanPage(cfgObj), 1200);
 

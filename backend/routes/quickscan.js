@@ -122,13 +122,13 @@ function buildQuickVerdict(domains, keywordResult, dnsResults) {
   else if (riskScore >= 31) verdict = 'YELLOW';
   else verdict = 'GREEN';
 
-  const needsDeepAI = riskScore >= 40 || keywordResult.triggeredHigh.length >= 2;
+  const needsDeepAI = fullScan === true || riskScore >= 40 || triggeredHigh.length >= 2;
 
   return { verdict, riskScore, flags, needsDeepAI, verifiedDomains };
 }
 
 router.post('/', async (req, res) => {
-  const { text, companyName } = req.body;
+  const { text, companyName, fullScan } = req.body;
 
   if (!text || typeof text !== 'string' || text.trim().length < 10) {
     return res.status(400).json({ error: 'INVALID_INPUT', message: 'Text must be at least 10 characters.' });

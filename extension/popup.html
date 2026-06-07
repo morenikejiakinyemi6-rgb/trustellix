@@ -6,58 +6,58 @@
   <title>Trustellix</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       width: 300px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f4f0;
-      color: #0f0f0d;
+      background: #0F172A;
+      color: #F1F5F9;
     }
 
     .header {
-      background: #0f0f0d;
-      padding: 16px 18px;
+      padding: 18px 18px 14px;
       display: flex;
       align-items: center;
       gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
     .logo-box {
-      width: 26px; height: 26px;
-      background: #e8440a;
-      border-radius: 5px;
+      width: 32px; height: 32px;
+      background: #2563EB;
+      border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
 
-    .logo-box svg { display: block; }
-
     .header-text h1 {
-      font-size: 14px;
-      font-weight: 700;
-      color: #f5f4f0;
-      letter-spacing: -0.01em;
+      font-size: 15px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.2px;
     }
 
     .header-text p {
       font-size: 10px;
-      color: #6b6860;
-      letter-spacing: 0.04em;
+      color: #64748B;
+      letter-spacing: 0.05em;
       margin-top: 1px;
     }
 
     .status-bar {
-      background: #1a7a4a;
-      padding: 8px 18px;
+      background: rgba(16,185,129,0.12);
+      padding: 10px 18px;
       display: flex;
       align-items: center;
       gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
     .status-dot {
-      width: 6px; height: 6px;
+      width: 7px; height: 7px;
       border-radius: 50%;
-      background: #5dd49a;
+      background: #10B981;
       animation: pulse 2s infinite;
+      flex-shrink: 0;
     }
 
     @keyframes pulse {
@@ -67,21 +67,56 @@
 
     .status-bar span {
       font-size: 11px;
-      color: #e8f5ee;
-      font-weight: 500;
+      color: #10B981;
+      font-weight: 600;
       letter-spacing: 0.04em;
     }
 
+    .open-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 16px 18px 0;
+      padding: 13px;
+      background: #2563EB;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      width: calc(100% - 36px);
+      transition: background 0.15s;
+      letter-spacing: -0.1px;
+    }
+
+    .open-btn:hover { background: #1D4ED8; }
+
+    .open-btn svg { flex-shrink: 0; }
+
+    .scan-hint {
+      margin: 10px 18px 0;
+      padding: 10px 13px;
+      background: rgba(37,99,235,0.12);
+      border: 1px solid rgba(37,99,235,0.25);
+      border-radius: 8px;
+      font-size: 12px;
+      color: #93C5FD;
+      line-height: 1.55;
+    }
+
     .section {
-      padding: 16px 18px;
-      border-bottom: 1px solid #e2e0d8;
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin-top: 14px;
     }
 
     .section-label {
       font-size: 9px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.1em;
-      color: #a09d97;
+      color: #475569;
       text-transform: uppercase;
       margin-bottom: 10px;
     }
@@ -100,27 +135,23 @@
       padding: 3px 8px;
       border-radius: 4px;
       font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      font-weight: 700;
       flex-shrink: 0;
       min-width: 80px;
     }
 
-    .legend-dot {
-      width: 5px; height: 5px;
-      border-radius: 50%;
-    }
+    .legend-dot { width: 5px; height: 5px; border-radius: 50%; }
 
-    .green { background: #e8f5ee; color: #1a7a4a; border: 1px solid #b7dfca; }
-    .green .legend-dot { background: #1a7a4a; }
-    .yellow { background: #fff8e6; color: #c47d00; border: 1px solid #f0d080; }
-    .yellow .legend-dot { background: #c47d00; }
-    .red { background: #fef0ed; color: #c42b0a; border: 1px solid #f5b8a8; }
-    .red .legend-dot { background: #c42b0a; }
+    .green { background: rgba(16,185,129,0.15); color: #10B981; border: 1px solid rgba(16,185,129,0.3); }
+    .green .legend-dot { background: #10B981; }
+    .yellow { background: rgba(249,115,22,0.15); color: #F97316; border: 1px solid rgba(249,115,22,0.3); }
+    .yellow .legend-dot { background: #F97316; }
+    .red { background: rgba(239,68,68,0.15); color: #EF4444; border: 1px solid rgba(239,68,68,0.3); }
+    .red .legend-dot { background: #EF4444; }
 
     .legend-desc {
       font-size: 11px;
-      color: #6b6860;
+      color: #64748B;
       line-height: 1.5;
       padding-top: 2px;
     }
@@ -128,16 +159,16 @@
     .sites-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      gap: 5px;
     }
 
     .site-chip {
       padding: 5px 8px;
-      background: white;
-      border: 1px solid #e2e0d8;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 5px;
       font-size: 10px;
-      color: #6b6860;
+      color: #64748B;
       text-align: center;
     }
 
@@ -146,19 +177,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
 
     .footer a {
       font-size: 10px;
-      color: #e8440a;
+      color: #2563EB;
       text-decoration: none;
       font-weight: 500;
     }
 
     .version {
       font-size: 10px;
-      color: #a09d97;
-      font-family: 'Courier New', monospace;
+      color: #334155;
+      font-family: monospace;
     }
   </style>
 </head>
@@ -166,14 +198,14 @@
 
   <div class="header">
     <div class="logo-box">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-        stroke="white" stroke-width="2.5">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <svg width="16" height="16" viewBox="0 0 24 28" fill="none">
+        <path d="M12 2L3 6.5v7c0 5.5 3.9 10.65 9 11.9 5.1-1.25 9-6.4 9-11.9v-7L12 2z" fill="white"/>
+        <path d="M8.5 13.5l2.5 2.5 4.5-5" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
     <div class="header-text">
       <h1>Trustellix</h1>
-      <p>TRUST-AS-A-SERVICE ENGINE</p>
+      <p>JOB SAFETY ENGINE</p>
     </div>
   </div>
 
@@ -182,53 +214,65 @@
     <span>ACTIVE — Scanning this page</span>
   </div>
 
+  <button class="open-btn" id="openBtn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Open Trustellix Scanner
+  </button>
+
+  <div class="scan-hint">
+    Paste any job offer, recruiter message, or WhatsApp text into the scanner for a deep AI analysis with detailed reasons.
+  </div>
+
   <div class="section">
     <div class="section-label">What the badges mean</div>
 
     <div class="legend-item">
       <div class="legend-badge green">
-        <div class="legend-dot"></div> VERIFIED
+        <div class="legend-dot"></div> SAFE
       </div>
-      <div class="legend-desc">
-        Established domain, clean infrastructure, no threat signals.
-      </div>
+      <div class="legend-desc">Verified signals. Company appears legitimate.</div>
     </div>
 
     <div class="legend-item">
       <div class="legend-badge yellow">
-        <div class="legend-dot"></div> UNVERIFIED
+        <div class="legend-dot"></div> CAUTION
       </div>
-      <div class="legend-desc">
-        New or unknown company. No active scam found. Proceed with caution.
-      </div>
+      <div class="legend-desc">Unverifiable company. Research before applying.</div>
     </div>
 
     <div class="legend-item" style="margin-bottom: 0;">
       <div class="legend-badge red">
         <div class="legend-dot"></div> HIGH RISK
       </div>
-      <div class="legend-desc">
-        Active threat signals detected. Do not share personal data.
-      </div>
+      <div class="legend-desc">Active threat signals. Do not share personal data.</div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-label">Active on these platforms</div>
+  <div class="section" style="padding-top:0; border-top:none;">
+    <div class="section-label" style="margin-bottom:8px;">Active on these platforms</div>
     <div class="sites-grid">
       <div class="site-chip">LinkedIn</div>
       <div class="site-chip">Jobberman</div>
       <div class="site-chip">Indeed NG</div>
       <div class="site-chip">MyJobMag</div>
       <div class="site-chip">NGCareers</div>
-      <div class="site-chip">+ More soon</div>
+      <div class="site-chip">HotNigeriaJobs</div>
     </div>
   </div>
 
   <div class="footer">
-    <a href="https://trustellix.com" target="_blank">trustellix.com</a>
+    <a href="https://trustellix.vercel.app" target="_blank">trustellix.vercel.app</a>
     <span class="version">v1.0.0</span>
   </div>
 
+  <script>
+    document.getElementById('openBtn').addEventListener('click', () => {
+      chrome.tabs.create({ url: 'https://trustellix.vercel.app' });
+    });
+  </script>
 </body>
 </html>
