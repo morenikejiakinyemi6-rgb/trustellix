@@ -10,52 +10,158 @@ const COLORS = {
 
 const CONFIGS = {
   'linkedin.com': {
-    cards: '.jobs-search-results-list__list-item, .job-card-container, .jobs-search-results__list-item',
-    title: '.job-card-list__title--link, .job-card-container__link, h3 a, h3',
+    cards: '.job-card-container',
+    title: '.job-card-list__title--link, h3 a, h3',
     company: '.job-card-container__primary-description, .artdeco-entity-lockup__subtitle span',
     description: '.job-card-container__metadata-item',
-    insertAfter: '.job-card-container__primary-description, .artdeco-entity-lockup__subtitle, .job-card-list__title',
-    detailPanel: '.jobs-search__job-details, [data-view-name="job-details"], .jobs-details, .job-view-layout',
-    detailTitle: 'h1, h2',
-    detailCompany: '.job-details-jobs-unified-top-card__company-name a, .jobs-unified-top-card__company-name a, .t-black--light a, .jobs-details-top-card__company-url',
-    detailDescription: '.jobs-description__container, .jobs-description, .jobs-box__html-content, #job-details, .jobs-description-content',
-    detailInsert: '.job-details-jobs-unified-top-card__primary-description-container, .jobs-unified-top-card__primary-description, .jobs-details-top-card__company-info, h1',
+    insertAfter: '.job-card-container__primary-description, .artdeco-entity-lockup__subtitle',
+    getDetailPanel: () => {
+      const selectors = [
+        '.jobs-details',
+        '.job-view-layout',
+        '.jobs-search__job-details--container',
+        '[data-view-name="job-details"]',
+        '.scaffold-layout__detail',
+      ];
+      for (const s of selectors) {
+        const el = document.querySelector(s);
+        if (el) return el;
+      }
+      return null;
+    },
+    getDetailTitle: (panel) => {
+      const h1 = panel.querySelector('h1');
+      return h1 ? h1.innerText.trim() : '';
+    },
+    getDetailCompany: (panel) => {
+      const selectors = [
+        '.job-details-jobs-unified-top-card__company-name a',
+        '.jobs-unified-top-card__company-name a',
+        '.t-black--light a',
+        '[data-test-app-aware-link]',
+      ];
+      for (const s of selectors) {
+        const el = panel.querySelector(s);
+        if (el) return el.innerText.trim();
+      }
+      return '';
+    },
+    getDetailDescription: (panel) => {
+      const selectors = [
+        '.jobs-description',
+        '#job-details',
+        '.jobs-box__html-content',
+        '.jobs-description-content',
+        '.jobs-description__content',
+      ];
+      for (const s of selectors) {
+        const el = panel.querySelector(s);
+        if (el) return el.innerText.trim().slice(0, 2000);
+      }
+      return '';
+    },
+    getDetailInsertTarget: (panel) => {
+      const selectors = [
+        '.job-details-jobs-unified-top-card__primary-description-container',
+        '.jobs-unified-top-card__primary-description',
+        '.jobs-details-top-card__company-info',
+        '.jobs-unified-top-card__content--two-pane',
+        'h1',
+      ];
+      for (const s of selectors) {
+        const el = panel.querySelector(s);
+        if (el) return el;
+      }
+      return null;
+    },
   },
   'jobberman.com': {
-    cards: 'article.job-card, .job-list-item, .job-card, [class*="job-item"], .flex.flex-col.rounded-md',
-    title: 'h2, h3, .job-title a, [class*="job-title"], a.text-brand-linked',
-    company: '.company-name, .employer, [class*="company"], .text-brand-gray-dark font',
-    description: '.job-description, .summary, [class*="description"], .text-brand-gray',
-    insertAfter: '.company-name, .employer, h3, h2, .text-brand-gray-dark',
-    detailPanel: '.job-overview__summary, .job-detail-container, .single-job, .job-detail, [class*="job-detail"]',
-    detailTitle: 'h1, h2.title, .text-brand-black-dark',
-    detailCompany: '.company-name, .employer-name, [class*="company"], .text-brand-linked-dark',
-    detailDescription: '.job-overview__description, .job-description, .description-body, [class*="description"]',
-    detailInsert: '.job-overview__summary-info, .company-name, .employer-name, h1',
-  },
-  'ngcareers.com': {
-    cards: '.job-item, .job-listing, article',
-    title: 'h2 a, h3 a, .job-title',
-    company: '.company, .employer, [class*="company"]',
-    description: '.description, .summary',
-    insertAfter: '.company, .employer, h3',
-    detailPanel: '.job-detail, .single-job',
-    detailTitle: 'h1',
-    detailCompany: '.company-name',
-    detailDescription: '.job-description',
-    detailInsert: '.company-name',
+    cards: 'article.job-card, .job-list-item, .job-card, [class*="job-item"], .jobs-block article',
+    title: 'h2, h3, .job-title a, [class*="job-title"], a.title',
+    company: '.company-name, .employer, [class*="company"], .job-company',
+    description: '.job-description, .summary, [class*="description"], .job-info',
+    insertAfter: '.company-name, .employer, h3, h2, [class*="company"]',
+    getDetailPanel: () => {
+      const selectors = [
+        '.job-detail-container',
+        '.single-job',
+        '.job-detail',
+        '[class*="job-detail"]',
+        'article.job',
+        '.job-content',
+        'main article',
+      ];
+      for (const s of selectors) {
+        const el = document.querySelector(s);
+        if (el) return el;
+      }
+      return document.querySelector('main') || document.querySelector('article');
+    },
+    getDetailTitle: (panel) => {
+      const el = panel.querySelector('h1, h2.title, .job-title');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailCompany: (panel) => {
+      const el = panel.querySelector('.company-name, .employer-name, [class*="company"], a[class*="company"]');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailDescription: (panel) => {
+      const el = panel.querySelector('.job-description, .description-body, [class*="description"], .job-detail-body');
+      return el ? el.innerText.trim().slice(0, 2000) : '';
+    },
+    getDetailInsertTarget: (panel) => {
+      return panel.querySelector('.company-name, .employer-name, h1, h2') || null;
+    },
   },
   'hotnigerianjobs.com': {
-    cards: 'article, .job-item, .entry',
-    title: 'h2 a, h3 a, .entry-title a',
-    company: '.company, [class*="company"]',
-    description: 'p, .summary',
-    insertAfter: 'h2, h3, .entry-title',
-    detailPanel: '.entry-content, .job-content, article',
-    detailTitle: 'h1, h2',
-    detailCompany: '.company',
-    detailDescription: '.entry-content p',
-    detailInsert: 'h1',
+    cards: 'article, .entry, .post, .job-item',
+    title: 'h2 a, h3 a, .entry-title a, .post-title a',
+    company: '.company, [class*="company"], .org',
+    description: 'p, .entry-summary, .post-excerpt',
+    insertAfter: 'h2, h3, .entry-title, .post-title',
+    getDetailPanel: () => {
+      return document.querySelector('.entry-content, .post-content, article, main') || null;
+    },
+    getDetailTitle: (panel) => {
+      const el = panel.querySelector('h1, h2');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailCompany: (panel) => {
+      const el = panel.querySelector('.company, [class*="company"], .org');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailDescription: (panel) => {
+      const el = panel.querySelector('.entry-content, .post-content, .content');
+      return el ? el.innerText.trim().slice(0, 2000) : '';
+    },
+    getDetailInsertTarget: (panel) => {
+      return panel.querySelector('h1, h2') || null;
+    },
+  },
+  'ngcareers.com': {
+    cards: '.job-item, .job-listing, article, [class*="job"]',
+    title: 'h2 a, h3 a, .job-title, .title a',
+    company: '.company, .employer, [class*="company"]',
+    description: '.description, .summary, p',
+    insertAfter: '.company, .employer, h3, h2',
+    getDetailPanel: () => {
+      return document.querySelector('.job-detail, .single-job, main, article') || null;
+    },
+    getDetailTitle: (panel) => {
+      const el = panel.querySelector('h1, h2');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailCompany: (panel) => {
+      const el = panel.querySelector('.company-name, .company, [class*="company"]');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailDescription: (panel) => {
+      const el = panel.querySelector('.job-description, .description, .content');
+      return el ? el.innerText.trim().slice(0, 2000) : '';
+    },
+    getDetailInsertTarget: (panel) => {
+      return panel.querySelector('.company-name, .company, h1') || null;
+    },
   },
   'indeed.com': {
     cards: '.job_seen_beacon, .tapItem, [data-jk]',
@@ -63,11 +169,42 @@ const CONFIGS = {
     company: '.companyName, [data-testid="company-name"]',
     description: '.job-snippet',
     insertAfter: '.companyName, [data-testid="company-name"]',
-    detailPanel: '.jobsearch-JobComponent, [data-testid="jobsearch-ViewJobLayout"], #jobDescriptionText',
-    detailTitle: 'h1',
-    detailCompany: '[data-testid="inlineHeader-companyName"] a',
-    detailDescription: '#jobDescriptionText',
-    detailInsert: '[data-testid="inlineHeader-companyName"]',
+    getDetailPanel: () => {
+      const selectors = [
+        '.jobsearch-JobComponent',
+        '[data-testid="jobsearch-ViewJobLayout"]',
+        '.jobsearch-ViewJobLayout',
+        '#jobDescriptionText',
+      ];
+      for (const s of selectors) {
+        const el = document.querySelector(s);
+        if (el) return el;
+      }
+      return null;
+    },
+    getDetailTitle: (panel) => {
+      const el = panel.querySelector('h1') || document.querySelector('h1');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailCompany: (panel) => {
+      const selectors = [
+        '[data-testid="inlineHeader-companyName"] a',
+        '.jobsearch-InlineCompanyRating a',
+        '.icl-u-lg-mr--sm',
+      ];
+      for (const s of selectors) {
+        const el = document.querySelector(s);
+        if (el) return el.innerText.trim();
+      }
+      return '';
+    },
+    getDetailDescription: (panel) => {
+      const el = document.querySelector('#jobDescriptionText');
+      return el ? el.innerText.trim().slice(0, 2000) : '';
+    },
+    getDetailInsertTarget: (panel) => {
+      return document.querySelector('[data-testid="inlineHeader-companyName"], .jobsearch-InlineCompanyRating') || null;
+    },
   },
   'myjobmag.com': {
     cards: '.job-listing, article, .job-item',
@@ -75,23 +212,37 @@ const CONFIGS = {
     company: '.company, .employer',
     description: '.description',
     insertAfter: '.company, .employer',
-    detailPanel: '.job-detail, .single-job',
-    detailTitle: 'h1',
-    detailCompany: '.company-name',
-    detailDescription: '.job-description',
-    detailInsert: '.company-name',
+    getDetailPanel: () => {
+      return document.querySelector('.job-detail, .single-job, main') || null;
+    },
+    getDetailTitle: (panel) => {
+      const el = panel.querySelector('h1, h2');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailCompany: (panel) => {
+      const el = panel.querySelector('.company-name, .company');
+      return el ? el.innerText.trim() : '';
+    },
+    getDetailDescription: (panel) => {
+      const el = panel.querySelector('.job-description, .description');
+      return el ? el.innerText.trim().slice(0, 2000) : '';
+    },
+    getDetailInsertTarget: (panel) => {
+      return panel.querySelector('.company-name, .company, h1') || null;
+    },
   },
 };
 
 function getConfig() {
   const host = window.location.hostname;
   for (const [key, cfg] of Object.entries(CONFIGS)) {
-    if (host.includes(key)) return cfg;
+    if (host.includes(key)) return { key, cfg };
   }
   return null;
 }
 
 function getText(el, selector) {
+  if (!selector) return '';
   const found = el.querySelector(selector);
   return found ? found.innerText.trim() : '';
 }
@@ -106,106 +257,79 @@ function safetyPercent(riskScore) {
   return Math.max(0, 100 - riskScore);
 }
 
-function shieldIcon(verdict) {
-  const c = COLORS[verdict];
-  if (verdict === 'GREEN') {
-    return `<svg width="13" height="14" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">
-      <path d="M12 2L3 6.5v7c0 5.5 3.9 10.65 9 11.9 5.1-1.25 9-6.4 9-11.9v-7L12 2z" fill="${c.dot}"/>
-      <path d="M8.5 13.5l2.5 2.5 4.5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
-  }
-  if (verdict === 'YELLOW') {
-    return `<svg width="13" height="14" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">
-      <path d="M12 2L3 6.5v7c0 5.5 3.9 10.65 9 11.9 5.1-1.25 9-6.4 9-11.9v-7L12 2z" fill="${c.dot}"/>
-      <text x="12" y="17" text-anchor="middle" fill="white" font-size="11" font-weight="800" font-family="Arial">!</text>
-    </svg>`;
-  }
-  return `<svg width="13" height="14" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">
-    <path d="M12 2L3 6.5v7c0 5.5 3.9 10.65 9 11.9 5.1-1.25 9-6.4 9-11.9v-7L12 2z" fill="${c.dot}"/>
-    <path d="M9 11l6 6M15 11l-6 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+function shieldSVG(color, verdict) {
+  const inner = verdict === 'GREEN'
+    ? `<path d="M8.5 13.5l2.5 2.5 4.5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
+    : verdict === 'RED'
+    ? `<path d="M9 11l6 6M15 11l-6 6" stroke="white" stroke-width="2" stroke-linecap="round"/>`
+    : `<text x="12" y="17" text-anchor="middle" fill="white" font-size="11" font-weight="800" font-family="Arial">!</text>`;
+
+  return `<svg width="13" height="14" viewBox="0 0 24 28" fill="none" style="display:block;flex-shrink:0;">
+    <path d="M12 2L3 6.5v7c0 5.5 3.9 10.65 9 11.9 5.1-1.25 9-6.4 9-11.9v-7L12 2z" fill="${color}"/>
+    ${inner}
   </svg>`;
 }
 
-function buildTooltipContent(verdict, safetyPct, reasons, summary) {
+function createTooltip(verdict, safety, reasons, summary) {
   const c = COLORS[verdict];
   const tooltip = document.createElement('div');
   tooltip.style.cssText = `
-    display: none; position: fixed; z-index: 2147483647;
-    background: ${NAVY}; color: #F1F5F9;
-    border-radius: 12px; padding: 16px;
-    max-width: 300px; min-width: 240px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    font-size: 12.5px; line-height: 1.55;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-    pointer-events: none; box-sizing: border-box;
-    border: 1px solid rgba(255,255,255,0.08);
+    display:none; position:fixed; z-index:2147483647;
+    background:#0F172A; color:#F1F5F9;
+    border-radius:12px; padding:16px;
+    max-width:300px; min-width:240px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+    font-size:12.5px; line-height:1.55;
+    box-shadow:0 12px 40px rgba(0,0,0,0.4);
+    pointer-events:none; box-sizing:border-box;
+    border:1px solid rgba(255,255,255,0.08);
   `;
 
-  const headerRow = document.createElement('div');
-  headerRow.style.cssText = `display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.1);`;
-  headerRow.innerHTML = `
-    ${shieldIcon(verdict)}
+  const header = document.createElement('div');
+  header.style.cssText = `display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.1);`;
+  header.innerHTML = `
+    ${shieldSVG(c.dot, verdict)}
     <div style="flex:1;">
       <div style="font-weight:800;font-size:13px;color:${c.dot};">Trustellix</div>
       <div style="font-size:10px;color:#94A3B8;letter-spacing:0.04em;">JOB SAFETY ENGINE</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:18px;font-weight:800;color:${c.dot};line-height:1;">${safetyPct}%</div>
+      <div style="font-size:18px;font-weight:800;color:${c.dot};line-height:1;">${safety}%</div>
       <div style="font-size:9px;color:#94A3B8;letter-spacing:0.04em;">SAFETY</div>
     </div>
   `;
-  tooltip.appendChild(headerRow);
+  tooltip.appendChild(header);
 
-  const statusBadge = document.createElement('div');
-  statusBadge.style.cssText = `
-    display:inline-flex;align-items:center;gap:6px;
-    padding:4px 10px;border-radius:5px;
-    background:${c.bg};border:1px solid ${c.border};
-    font-size:11px;color:${c.text};font-weight:700;
-    margin-bottom:${reasons?.length || summary ? '12px' : '0'};
-  `;
-  statusBadge.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${c.dot};display:block;"></span>${c.label}`;
-  tooltip.appendChild(statusBadge);
+  const badge = document.createElement('div');
+  badge.style.cssText = `display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:5px;background:${c.bg};border:1px solid ${c.border};font-size:11px;color:${c.text};font-weight:700;margin-bottom:10px;`;
+  badge.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${c.dot};display:block;"></span>${c.label}`;
+  tooltip.appendChild(badge);
 
-  if (summary && verdict !== 'GREEN') {
-    const sumEl = document.createElement('p');
-    sumEl.style.cssText = `font-size:12px;color:#CBD5E1;margin:0 0 ${reasons?.length ? '10px' : '0'} 0;line-height:1.6;`;
-    sumEl.textContent = summary.replace(/-/g, ' ');
-    tooltip.appendChild(sumEl);
-  }
-
-  if (verdict === 'GREEN' && (!reasons || reasons.length === 0)) {
-    const clean = document.createElement('p');
-    clean.style.cssText = `font-size:12px;color:#94A3B8;margin:0;line-height:1.6;`;
-    clean.textContent = 'No threat signals detected. This listing appears clean based on available data.';
-    tooltip.appendChild(clean);
-  }
-
-  if (reasons?.length && verdict !== 'GREEN') {
-    const list = document.createElement('div');
-    list.style.cssText = `display:flex;flex-direction:column;gap:0;`;
-    reasons.slice(0, 4).forEach((r, i) => {
-      const row = document.createElement('div');
-      row.style.cssText = `display:flex;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,0.06);align-items:flex-start;font-size:12px;`;
-      row.innerHTML = `
-        <span style="color:${c.dot};font-weight:800;flex-shrink:0;font-size:10px;margin-top:2px;min-width:16px;">${String(i+1).padStart(2,'0')}</span>
-        <span style="color:#CBD5E1;">${r.replace(/-/g, ' ')}</span>
-      `;
-      list.appendChild(row);
-    });
-    tooltip.appendChild(list);
+  if (verdict === 'GREEN') {
+    const msg = document.createElement('p');
+    msg.style.cssText = `font-size:12px;color:#94A3B8;margin:0;line-height:1.6;`;
+    msg.textContent = 'No threat signals found in this listing. Domain and content appear clean.';
+    tooltip.appendChild(msg);
+  } else {
+    if (summary) {
+      const s = document.createElement('p');
+      s.style.cssText = `font-size:12px;color:#CBD5E1;margin:0 0 10px;line-height:1.6;`;
+      s.textContent = summary.replace(/-/g, ' ');
+      tooltip.appendChild(s);
+    }
+    if (reasons && reasons.length > 0) {
+      reasons.slice(0, 4).forEach((r, i) => {
+        const row = document.createElement('div');
+        row.style.cssText = `display:flex;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,0.06);align-items:flex-start;font-size:12px;`;
+        row.innerHTML = `<span style="color:${c.dot};font-weight:800;flex-shrink:0;font-size:10px;margin-top:2px;min-width:16px;">${String(i+1).padStart(2,'0')}</span><span style="color:#CBD5E1;">${r.replace(/-/g, ' ')}</span>`;
+        tooltip.appendChild(row);
+      });
+    }
   }
 
   const footer = document.createElement('div');
-  footer.style.cssText = `
-    margin-top:12px;padding-top:10px;
-    border-top:1px solid rgba(255,255,255,0.07);
-    display:flex;align-items:center;gap:6px;
-  `;
-  footer.innerHTML = `
-    ${shieldIcon(verdict)}
-    <span style="font-size:10px;color:#475569;letter-spacing:0.03em;">Trustellix Job Safety Engine</span>
-  `;
+  footer.style.cssText = `margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07);font-size:10px;color:#475569;`;
+  footer.textContent = 'Trustellix Job Safety Engine';
   tooltip.appendChild(footer);
 
   document.body.appendChild(tooltip);
@@ -220,24 +344,21 @@ function createCompactBadge(verdict, riskScore, reasons, summary) {
   const wrap = document.createElement('span');
   wrap.className = BADGE_CLASS;
   wrap.style.cssText = `
-    display: inline-flex; align-items: center; gap: 5px;
-    margin: 5px 0 2px 0; padding: 3px 8px 3px 5px;
-    border-radius: 5px; background: ${c.bg};
-    border: 1px solid ${c.border};
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    font-size: 11px; color: ${c.text}; cursor: pointer;
-    width: fit-content; position: relative; line-height: 1.2;
-    vertical-align: middle; box-sizing: border-box;
-    transition: opacity 0.15s;
+    display:inline-flex;align-items:center;gap:5px;
+    margin:5px 0 2px 0;padding:3px 8px 3px 5px;
+    border-radius:5px;background:${c.bg};border:1px solid ${c.border};
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+    font-size:11px;color:${c.text};cursor:pointer;
+    width:fit-content;position:relative;line-height:1.2;
+    vertical-align:middle;box-sizing:border-box;
   `;
-
   wrap.innerHTML = `
-    ${shieldIcon(correctedVerdict)}
-    <span style="font-weight:700;font-size:10.5px;letter-spacing:0.01em;">${safety}%</span>
+    ${shieldSVG(c.dot, correctedVerdict)}
+    <span style="font-weight:700;font-size:10.5px;">${safety}%</span>
     <span style="font-size:10px;opacity:0.8;font-weight:600;">${c.label}</span>
   `;
 
-  const tooltip = buildTooltipContent(correctedVerdict, safety, reasons, summary);
+  const tooltip = createTooltip(correctedVerdict, safety, reasons, summary);
 
   wrap.addEventListener('mouseenter', () => {
     const rect = wrap.getBoundingClientRect();
@@ -280,18 +401,14 @@ async function processCard(card, cfg) {
 
   const target = card.querySelector(cfg.insertAfter);
   if (!target) { card.setAttribute(ATTR, 'skip'); return; }
-  if (target.nextSibling?.classList?.contains(BADGE_CLASS)) { card.setAttribute(ATTR, 'done'); return; }
+  if (target.nextSibling && target.nextSibling.classList && target.nextSibling.classList.contains(BADGE_CLASS)) {
+    card.setAttribute(ATTR, 'done'); return;
+  }
 
   const loading = document.createElement('span');
   loading.className = BADGE_CLASS;
-  loading.style.cssText = `
-    display:inline-flex;align-items:center;gap:5px;
-    margin:5px 0 2px 0;padding:3px 8px;border-radius:5px;
-    background:#F8FAFC;border:1px solid #E2E8F0;
-    font-family:-apple-system,sans-serif;font-size:10px;
-    color:#94A3B8;width:fit-content;
-  `;
-  loading.innerHTML = `${shieldIcon('GREEN')}<span>Checking...</span>`;
+  loading.style.cssText = `display:inline-flex;align-items:center;gap:5px;margin:5px 0 2px 0;padding:3px 8px;border-radius:5px;background:#F8FAFC;border:1px solid #E2E8F0;font-family:-apple-system,sans-serif;font-size:10px;color:#94A3B8;width:fit-content;`;
+  loading.textContent = 'Checking...';
   target.insertAdjacentElement('afterend', loading);
 
   try {
@@ -310,55 +427,40 @@ async function processCard(card, cfg) {
 }
 
 let detailScanned = '';
+let detailScanning = false;
 
 async function processDetailPanel(cfg) {
-  const panelSelectors = cfg.detailPanel.split(', ');
-  let panel = null;
-  for (const sel of panelSelectors) {
-    panel = document.querySelector(sel.trim());
-    if (panel) break;
-  }
+  if (detailScanning) return;
+
+  const panel = cfg.getDetailPanel();
   if (!panel) return;
 
-  const title   = getText(panel, cfg.detailTitle);
-  const company = getText(panel, cfg.detailCompany);
-  const desc    = getText(panel, cfg.detailDescription);
+  const title   = cfg.getDetailTitle(panel);
+  const company = cfg.getDetailCompany(panel);
+  const desc    = cfg.getDetailDescription(panel);
   const combined = [title, company, desc].filter(Boolean).join(' ');
   const fingerprint = (company + title).slice(0, 80);
 
-  if (fingerprint === detailScanned || combined.length < 15) return;
+  if (!fingerprint.trim() || fingerprint === detailScanned || combined.length < 20) return;
   detailScanned = fingerprint;
+  detailScanning = true;
 
-  const insertSelectors = cfg.detailInsert.split(', ');
-  let insertTarget = null;
-  for (const sel of insertSelectors) {
-    insertTarget = panel.querySelector(sel.trim());
-    if (insertTarget) break;
-  }
-
-  if (!insertTarget) {
-    const fallback = panel.querySelector('h1, h2');
-    if (fallback) insertTarget = fallback;
-    else return;
-  }
+  const insertTarget = cfg.getDetailInsertTarget(panel);
+  if (!insertTarget) { detailScanning = false; return; }
 
   document.querySelectorAll('.tsx-detail-badge').forEach(el => el.remove());
 
   const loading = document.createElement('div');
   loading.className = 'tsx-detail-badge';
-  loading.style.cssText = `
-    display:inline-flex;align-items:center;gap:8px;
-    margin:12px 0;padding:10px 16px;border-radius:8px;
-    background:#F8FAFC;border:1.5px solid #E2E8F0;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
-    font-size:13px;color:#94A3B8;
-  `;
-  loading.innerHTML = `${shieldIcon('GREEN')}<span>Trustellix is analyzing this job...</span>`;
+  loading.style.cssText = `display:inline-flex;align-items:center;gap:8px;margin:12px 0;padding:10px 16px;border-radius:8px;background:#F8FAFC;border:1.5px solid #E2E8F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;color:#94A3B8;`;
+  loading.innerHTML = `${shieldSVG('#94A3B8', 'GREEN')}<span>Trustellix is analyzing this job...</span>`;
   insertTarget.insertAdjacentElement('afterend', loading);
 
   try {
     const result = await callScan(combined, company);
     loading.remove();
+    detailScanning = false;
+
     if (!result.success) return;
 
     const { verdict, riskScore, reasons, summary } = result.data;
@@ -368,53 +470,76 @@ async function processDetailPanel(cfg) {
 
     const card = document.createElement('div');
     card.className = 'tsx-detail-badge';
-    card.style.cssText = `
-      margin: 14px 0; padding: 16px 18px;
-      border-radius: 10px; background: ${c.bg};
-      border: 1.5px solid ${c.border};
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      max-width: 100%; box-sizing: border-box;
-    `;
+    card.style.cssText = `margin:14px 0;padding:16px 18px;border-radius:10px;background:${c.bg};border:1.5px solid ${c.border};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:100%;box-sizing:border-box;`;
 
     const topRow = document.createElement('div');
-    topRow.style.cssText = `display:flex;align-items:center;gap:10px;margin-bottom:${summary || reasons?.length ? '12px' : '0'};`;
-    topRow.innerHTML = `
-      ${shieldIcon(correctedVerdict)}
-      <span style="font-weight:800;font-size:14px;color:${c.text};">Trustellix: ${c.label}</span>
-      <span style="margin-left:auto;font-size:13px;color:${c.text};font-weight:700;">${safety}% Safe</span>
-    `;
+    topRow.style.cssText = `display:flex;align-items:center;gap:10px;margin-bottom:${summary || (reasons && reasons.length) ? '12px' : '0'};`;
+    topRow.innerHTML = `${shieldSVG(c.dot, correctedVerdict)}<span style="font-weight:800;font-size:14px;color:${c.text};">Trustellix: ${c.label}</span><span style="margin-left:auto;font-size:13px;color:${c.text};font-weight:700;">${safety}% Safe</span>`;
     card.appendChild(topRow);
 
-    if (summary && correctedVerdict !== 'GREEN') {
-      const sumEl = document.createElement('p');
-      sumEl.style.cssText = `font-size:13px;color:${c.text};opacity:0.85;margin:0 0 ${reasons?.length ? '12px' : '0'} 0;line-height:1.65;`;
-      sumEl.textContent = summary.replace(/-/g, ' ');
-      card.appendChild(sumEl);
-    }
-
     if (correctedVerdict === 'GREEN') {
-      const cleanMsg = document.createElement('p');
-      cleanMsg.style.cssText = `font-size:13px;color:${c.text};opacity:0.8;margin:0;line-height:1.65;`;
-      cleanMsg.textContent = 'No threat signals detected. This listing appears legitimate based on our analysis.';
-      card.appendChild(cleanMsg);
-    }
-
-    if (reasons?.length && correctedVerdict !== 'GREEN') {
-      reasons.slice(0, 3).forEach(r => {
-        const row = document.createElement('div');
-        row.style.cssText = `display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:${c.text};opacity:0.85;margin-top:7px;`;
-        row.innerHTML = `<span style="flex-shrink:0;margin-top:3px;font-size:8px;color:${c.dot};">●</span><span>${r.replace(/-/g, ' ')}</span>`;
-        card.appendChild(row);
-      });
+      const msg = document.createElement('p');
+      msg.style.cssText = `font-size:13px;color:${c.text};opacity:0.8;margin:0;line-height:1.65;`;
+      msg.textContent = 'No threat signals detected. This listing appears legitimate based on domain, content, and behavioral analysis.';
+      card.appendChild(msg);
+    } else {
+      if (summary) {
+        const s = document.createElement('p');
+        s.style.cssText = `font-size:13px;color:${c.text};opacity:0.85;margin:0 0 ${reasons && reasons.length ? '12px' : '0'};line-height:1.65;`;
+        s.textContent = summary.replace(/-/g, ' ');
+        card.appendChild(s);
+      }
+      if (reasons && reasons.length) {
+        reasons.slice(0, 3).forEach(r => {
+          const row = document.createElement('div');
+          row.style.cssText = `display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:${c.text};opacity:0.85;margin-top:7px;`;
+          row.innerHTML = `<span style="flex-shrink:0;margin-top:3px;font-size:8px;color:${c.dot};">●</span><span>${r.replace(/-/g, ' ')}</span>`;
+          card.appendChild(row);
+        });
+      }
     }
 
     insertTarget.insertAdjacentElement('afterend', card);
   } catch {
     loading.remove();
+    detailScanning = false;
   }
 }
 
-function scanPage(cfg) {
+function addFloatingIndicator() {
+  if (document.getElementById('tsx-float')) return;
+
+  const float = document.createElement('div');
+  float.id = 'tsx-float';
+  float.title = 'Trustellix is active on this page';
+  float.style.cssText = `
+    position:fixed; bottom:20px; right:20px; z-index:2147483646;
+    width:40px; height:40px; border-radius:50%;
+    background:#2563EB; box-shadow:0 4px 16px rgba(37,99,235,0.4);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;
+    border:2px solid rgba(255,255,255,0.3);
+  `;
+  float.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 28" fill="none"><path d="M12 2L3 6.5v7c0 5.5 3.9 10.65 9 11.9 5.1-1.25 9-6.4 9-11.9v-7L12 2z" fill="white"/><path d="M8.5 13.5l2.5 2.5 4.5-5" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  const pulse = document.createElement('span');
+  pulse.style.cssText = `position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#10B981;border:2px solid white;`;
+  float.appendChild(pulse);
+
+  float.addEventListener('mouseenter', () => {
+    float.style.transform = 'scale(1.1)';
+    float.style.boxShadow = '0 6px 24px rgba(37,99,235,0.5)';
+  });
+  float.addEventListener('mouseleave', () => {
+    float.style.transform = 'scale(1)';
+    float.style.boxShadow = '0 4px 16px rgba(37,99,235,0.4)';
+  });
+
+  document.body.appendChild(float);
+}
+
+function scanPage(cfgObj) {
+  const { cfg } = cfgObj;
   document.querySelectorAll(cfg.cards).forEach(card => {
     if (card.getAttribute(ATTR)) return;
     const rect = card.getBoundingClientRect();
@@ -422,20 +547,37 @@ function scanPage(cfg) {
       processCard(card, cfg);
     }
   });
-  if (cfg.detailPanel) processDetailPanel(cfg);
+  processDetailPanel(cfg);
 }
 
 function init() {
-  const cfg = getConfig();
-  if (!cfg) return;
+  const cfgObj = getConfig();
+  if (!cfgObj) return;
 
-  setTimeout(() => scanPage(cfg), 1200);
+  addFloatingIndicator();
+
+  setTimeout(() => scanPage(cfgObj), 1200);
 
   let scrollT;
   window.addEventListener('scroll', () => {
     clearTimeout(scrollT);
-    scrollT = setTimeout(() => scanPage(cfg), 400);
+    scrollT = setTimeout(() => scanPage(cfgObj), 400);
   }, { passive: true });
+
+  let lastUrl = location.href;
+  let urlT;
+  const urlObserver = new MutationObserver(() => {
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      detailScanned = '';
+      detailScanning = false;
+      clearTimeout(urlT);
+      urlT = setTimeout(() => {
+        scanPage(cfgObj);
+      }, 1500);
+    }
+  });
+  urlObserver.observe(document.body, { childList: true, subtree: true });
 
   let mutationT;
   const observer = new MutationObserver((mutations) => {
@@ -445,13 +587,14 @@ function init() {
       [...m.addedNodes].some(n =>
         n.nodeType === 1 &&
         (n.classList?.contains(BADGE_CLASS) ||
-          n.classList?.contains('tsx-detail-badge') ||
-          n.querySelector?.('.' + BADGE_CLASS))
+         n.classList?.contains('tsx-detail-badge') ||
+         n.id === 'tsx-float' ||
+         n.querySelector?.('.' + BADGE_CLASS))
       )
     );
     if (isOwn) return;
     clearTimeout(mutationT);
-    mutationT = setTimeout(() => scanPage(cfg), 800);
+    mutationT = setTimeout(() => scanPage(cfgObj), 800);
   });
 
   observer.observe(document.body, { childList: true, subtree: true });

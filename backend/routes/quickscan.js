@@ -59,8 +59,27 @@ function extractDomains(text) {
 
 function runLocalKeywordScan(text) {
   const lower = text.toLowerCase();
-  const triggeredHigh = HIGH_RISK_KEYWORDS.filter(k => lower.includes(k));
-  const triggeredMedium = MEDIUM_RISK_KEYWORDS.filter(k => lower.includes(k));
+
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const triggeredHigh = HIGH_RISK_KEYWORDS.filter(k => {
+    try {
+      const pattern = new RegExp('\\b' + escapeRegex(k) + '\\b', 'i');
+      return pattern.test(lower);
+    } catch {
+      return false;
+    }
+  });
+
+  const triggeredMedium = MEDIUM_RISK_KEYWORDS.filter(k => {
+    try {
+      const pattern = new RegExp('\\b' + escapeRegex(k) + '\\b', 'i');
+      return pattern.test(lower);
+    } catch {
+      return false;
+    }
+  });
+
   return { triggeredHigh, triggeredMedium };
 }
 
