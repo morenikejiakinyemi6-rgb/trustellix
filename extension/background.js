@@ -8,15 +8,12 @@ async function scanJob(text, companyName, fullScan) {
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.result;
   }
-
   const response = await fetch(API_BASE + '/quickscan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, companyName, fullScan: fullScan || false }),
   });
-
   if (!response.ok) throw new Error('API error ' + response.status);
-
   const result = await response.json();
   cache.set(cacheKey, { result, timestamp: Date.now() });
   if (cache.size > 200) cache.delete(cache.keys().next().value);
@@ -30,7 +27,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   }
-
   if (message.type === 'OPEN_SITE') {
     chrome.tabs.create({ url: 'https://trustellix.vercel.app' });
     sendResponse({ done: true });
