@@ -105,64 +105,77 @@ const CONFIGS = {
       const el = panel.querySelector('.company-name, .employer-name, [class*="company"], a[class*="company"]');
       return el ? el.innerText.trim() : '';
     },
-    getDetailDescription: (panel) => {
-      const el = panel.querySelector('.job-description, .description-body, [class*="description"], .job-detail-body');
-      return el ? el.innerText.trim().slice(0, 2000) : '';
+    getDetailDescription: (panel) => {  
+      // Collect ALL text from the page relevant to the job  
+      const parts = [];  
+      const selectors = [    
+        '.job-detail-container',    
+        '.job-detail-body',    
+        '.description-body',    
+        '[class*="description"]',    
+        '.job-summary',    
+        '.responsibilities',    
+        '.requirements',    
+        'article',    
+        'main',  
+      ];  
+      for (const s of selectors) {    
+        const el = panel.querySelector(s) || document.querySelector(s);    
+        if (el) {      
+          parts.push(el.innerText.trim());      
+          break;    
+        }  
+      }  
+      if (parts.length === 0) {    
+        (panel || document).querySelectorAll('p, li, h2, h3').forEach(el => {      
+          parts.push(el.innerText.trim());    
+        });  
+      }  
+      return parts.join(' ').slice(0, 2500);
     },
-    getDetailInsertTarget: (panel) => {
-      return panel.querySelector('.company-name, .employer-name, h1, h2') || null;
+    getDetailInsertTarget: (panel) => {  
+      // Try to insert after the job title h1 or h2  
+      const title = panel.querySelector('h1, h2.title, [class*="job-title"]') || document.querySelector('h1, h2.title, [class*="job-title"]');  
+      if (title) return title;  
+      // Fallback: after the breadcrumb  
+      return panel.querySelector('.breadcrumb, nav, .job-header') || document.querySelector('.breadcrumb, nav, .job-header') || null;
     },
   },
   'hotnigerianjobs.com': {
-    cards: 'article, .entry, .post, .job-item',
-    title: 'h2 a, h3 a, .entry-title a, .post-title a',
-    company: '.company, [class*="company"], .org',
-    description: 'p, .entry-summary, .post-excerpt',
-    insertAfter: 'h2, h3, .entry-title, .post-title',
-    getDetailPanel: () => {
-      return document.querySelector('.entry-content, .post-content, article, main') || null;
-    },
-    getDetailTitle: (panel) => {
-      const el = panel.querySelector('h1, h2');
-      return el ? el.innerText.trim() : '';
-    },
-    getDetailCompany: (panel) => {
-      const el = panel.querySelector('.company, [class*="company"], .org');
-      return el ? el.innerText.trim() : '';
-    },
-    getDetailDescription: (panel) => {
-      const el = panel.querySelector('.entry-content, .post-content, .content');
-      return el ? el.innerText.trim().slice(0, 2000) : '';
-    },
-    getDetailInsertTarget: (panel) => {
-      return panel.querySelector('h1, h2') || null;
-    },
+  cards: 'h2.entry-title, .entry-title, article h2',
+  title: 'a',
+  company: '.entry-meta, .posted-by',
+  description: '.entry-summary, p',
+  insertAfter: 'a',
+  getDetailPanel: () => {
+    return document.querySelector('.entry-content, .post-content, .single-post, main') || document.body;
   },
-  'ngcareers.com': {
-    cards: '.job-item, .job-listing, article, [class*="job"]',
-    title: 'h2 a, h3 a, .job-title, .title a',
-    company: '.company, .employer, [class*="company"]',
-    description: '.description, .summary, p',
-    insertAfter: '.company, .employer, h3, h2',
-    getDetailPanel: () => {
-      return document.querySelector('.job-detail, .single-job, main, article') || null;
-    },
-    getDetailTitle: (panel) => {
-      const el = panel.querySelector('h1, h2');
-      return el ? el.innerText.trim() : '';
-    },
-    getDetailCompany: (panel) => {
-      const el = panel.querySelector('.company-name, .company, [class*="company"]');
-      return el ? el.innerText.trim() : '';
-    },
-    getDetailDescription: (panel) => {
-      const el = panel.querySelector('.job-description, .description, .content');
-      return el ? el.innerText.trim().slice(0, 2000) : '';
-    },
-    getDetailInsertTarget: (panel) => {
-      return panel.querySelector('.company-name, .company, h1') || null;
-    },
+  getDetailTitle: (panel) => {
+    const el = document.querySelector('h1.entry-title, h1, h2.entry-title');
+    return el ? el.innerText.trim() : '';
   },
+  getDetailCompany: (panel) => {
+    // HotNigerianJobs embeds company name in the title: "Job Title at Company Name"
+    const title = document.querySelector('h1.entry-title, h1');
+    if (title) {
+      const match = title.innerText.match(/ at (.+)$/i);
+      if (match) return match[1].trim();
+    }
+    return '';
+  },
+  getDetailDescription: (panel) => {
+    const allText = [];
+    document.querySelectorAll('.entry-content p, .entry-content li, .entry-content h3, .entry-content h4').forEach(el => {
+      allText.push(el.innerText.trim());
+    });
+    if (allText.length > 0) return allText.join(' ').slice(0, 2500);
+    const content = document.querySelector('.entry-content, .post-content');
+    return content ? content.innerText.trim().slice(0, 2500) : '';
+  },
+  getDetailInsertTarget: (panel) => {
+    return document.querySelector('h1.entry-title, h1, h2.entry-title') || null;
+  },
+},
   'indeed.com': {
     cards: '.job_seen_beacon, .tapItem, [data-jk]',
     title: 'h2.jobTitle span, .jobTitle a span',
@@ -207,30 +220,38 @@ const CONFIGS = {
     },
   },
   'myjobmag.com': {
-    cards: '.job-listing, article, .job-item',
-    title: 'h2 a, h3 a',
-    company: '.company, .employer',
-    description: '.description',
-    insertAfter: '.company, .employer',
-    getDetailPanel: () => {
-      return document.querySelector('.job-detail, .single-job, main') || null;
-    },
-    getDetailTitle: (panel) => {
-      const el = panel.querySelector('h1, h2');
-      return el ? el.innerText.trim() : '';
-    },
-    getDetailCompany: (panel) => {
-      const el = panel.querySelector('.company-name, .company');
-      return el ? el.innerText.trim() : '';
-    },
-    getDetailDescription: (panel) => {
-      const el = panel.querySelector('.job-description, .description');
-      return el ? el.innerText.trim().slice(0, 2000) : '';
-    },
-    getDetailInsertTarget: (panel) => {
-      return panel.querySelector('.company-name, .company, h1') || null;
-    },
+  cards: '.job-listing-item, .single-job, article.job, [class*="job-list"] li',
+  title: 'h2 a, h3 a, .job-title a, a.title',
+  company: '.company-name, [class*="company"], .employer',
+  description: 'p, .job-excerpt',
+  insertAfter: '.company-name, [class*="company"], h3, h2',
+  getDetailPanel: () => {
+    return document.querySelector('.job-detail, .single-job-detail, main article, main, .content-area') || null;
   },
+  getDetailTitle: (panel) => {
+    const el = document.querySelector('h1, .job-title, h2.entry-title');
+    return el ? el.innerText.trim() : '';
+  },
+  getDetailCompany: (panel) => {
+    const selectors = ['.company-name', '[class*="company"]', '.employer', '.organization'];
+    for (const s of selectors) {
+      const el = document.querySelector(s);
+      if (el) return el.innerText.trim();
+    }
+    return '';
+  },
+  getDetailDescription: (panel) => {
+    const allText = [];
+    document.querySelectorAll('main p, main li, .job-description p, .job-description li, .entry-content p').forEach(el => {
+      allText.push(el.innerText.trim());
+    });
+    if (allText.length > 0) return allText.join(' ').slice(0, 2500);
+    return panel ? panel.innerText.trim().slice(0, 2500) : '';
+  },
+  getDetailInsertTarget: (panel) => {
+    return document.querySelector('h1, .job-title, .company-name') || null;
+  },
+},
 };
 
 function getConfig() {
@@ -305,10 +326,12 @@ function createTooltip(verdict, safety, reasons, summary) {
   badge.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${c.dot};display:block;"></span>${c.label}`;
   tooltip.appendChild(badge);
 
-  if (verdict === 'GREEN') {
+ if (verdict === 'GREEN') {
     const msg = document.createElement('p');
     msg.style.cssText = `font-size:12px;color:#94A3B8;margin:0;line-height:1.6;`;
-    msg.textContent = 'No threat signals found in this listing. Domain and content appear clean.';
+    msg.textContent = safety >= 90
+      ? 'No threat signals found. Domain and content appear clean.'
+      : 'Minor unverifiable signals detected. No explicit scam patterns found but proceed with some caution.';
     tooltip.appendChild(msg);
   } else {
     if (summary) {
@@ -480,7 +503,9 @@ async function processDetailPanel(cfg) {
     if (correctedVerdict === 'GREEN') {
       const msg = document.createElement('p');
       msg.style.cssText = `font-size:13px;color:${c.text};opacity:0.8;margin:0;line-height:1.65;`;
-      msg.textContent = 'No threat signals detected. This listing appears legitimate based on domain, content, and behavioral analysis.';
+      msg.textContent = safety >= 90
+        ? 'No threat signals detected. This listing appears legitimate based on domain, content, and behavioral analysis.'
+        : 'Some minor unverifiable signals detected. No explicit scam patterns found but the company presence is limited. Research before applying.';
       card.appendChild(msg);
     } else {
       if (summary) {
@@ -582,8 +607,13 @@ function init() {
       detailScanning = false;
       clearTimeout(urlT);
       urlT = setTimeout(() => {
-        scanPage(cfgObj);
-      }, 1500);
+  scanPage(cfgObj);
+  // Try again after 3 seconds for slow-loading panels
+  setTimeout(() => {
+    detailScanned = '';
+    scanPage(cfgObj);
+  }, 3000);
+}, 1000);
     }
   });
   urlObserver.observe(document.body, { childList: true, subtree: true });

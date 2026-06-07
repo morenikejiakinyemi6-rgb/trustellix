@@ -24,7 +24,7 @@ export default function InlineDemo() {
       const res = await fetch('https://trustellix-backend.onrender.com/api/quickscan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, fullScan: true }),
       });
       if (!res.ok) throw new Error('Server error');
       const data = await res.json();
