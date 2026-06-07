@@ -21,11 +21,12 @@ const SCAM_DOMAINS = new Set([
 ]);
 
 const HIGH_RISK_KEYWORDS = [
-  'bvn', 'nin', 'national identity', 'national id',
+  '\\bbvn\\b', '\\bnin\\b', 'national identity', 'national id',
   'send your passport', 'upload your passport',
   'training fee', 'registration fee', 'resume fee',
   'pay before', 'payment required', 'processing fee',
   'telegram interview', 'whatsapp interview',
+  'interview on telegram', 'interview on whatsapp',
   'wire transfer', 'western union', 'moneygram',
   'send money', 'transfer funds',
   'work from home earn', 'earn from home',
@@ -35,9 +36,8 @@ const MEDIUM_RISK_KEYWORDS = [
   'specially selected', 'you have been chosen',
   'urgent recruitment', 'immediate employment',
   'limited slots', 'do not share', 'keep confidential',
-  'test project', 'assessment task', 'trial project',
-  'complete this task to proceed',
-  'forward your cv', 'send your cv to whatsapp',
+  'test project', 'trial project',
+  'forward your cv to whatsapp', 'send your cv to whatsapp',
 ];
 
 const DOMAIN_REGEX = /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]{2,256}\.[a-zA-Z]{2,})/gi;
@@ -59,27 +59,20 @@ function extractDomains(text) {
 
 function runLocalKeywordScan(text) {
   const lower = text.toLowerCase();
-
-  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
   const triggeredHigh = HIGH_RISK_KEYWORDS.filter(k => {
     try {
-      const pattern = new RegExp('\\b' + escapeRegex(k) + '\\b', 'i');
-      return pattern.test(lower);
+      return new RegExp(k, 'i').test(lower);
     } catch {
-      return false;
+      return lower.includes(k);
     }
   });
-
   const triggeredMedium = MEDIUM_RISK_KEYWORDS.filter(k => {
     try {
-      const pattern = new RegExp('\\b' + escapeRegex(k) + '\\b', 'i');
-      return pattern.test(lower);
+      return new RegExp('\\b' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(lower);
     } catch {
-      return false;
+      return lower.includes(k);
     }
   });
-
   return { triggeredHigh, triggeredMedium };
 }
 
@@ -89,20 +82,33 @@ function buildQuickVerdict(domains, keywordResult, dnsResults) {
 
   keywordResult.triggeredHigh.forEach(k => {
     riskScore += 20;
-    flags.push({ signal: 'HIGH_RISK_KEYWORD', severity: 'HIGH', detail: 'High risk pattern detected: ' + k });
+    flags.push({
+      signal: 'HIGH_RISK_KEYWORD',
+      severity: 'HIGH',
+      detail: 'High risk pattern detected: ' + k,
+    });
   });
 
   keywordResult.triggeredMedium.forEach(k => {
     riskScore += 8;
-    flags.push({ signal: 'MEDIUM_RISK_KEYWORD', severity: 'MEDIUM', detail: 'Suspicious phrase detected: ' + k });
+    flags.push({
+      signal: 'MEDIUM_RISK_KEYWORD',
+      severity: 'MEDIUM',
+      detail: 'Suspicious phrase detected: ' + k,
+    });
   });
 
   const verifiedDomains = domains.filter(d => VERIFIED_EMPLOYERS.has(d));
   const freeEmailDomains = domains.filter(d => SCAM_DOMAINS.has(d));
+  const unknownDomains = domains.filter(d => !VERIFIED_EMPLOYERS.has(d) && !SCAM_DOMAINS.has(d));
 
   if (freeEmailDomains.length > 0) {
     riskScore += 25;
-    flags.push({ signal: 'FREE_EMAIL_PROVIDER', severity: 'HIGH', detail: 'Corporate recruiter using free email: ' + freeEmailDomains.join(', ') });
+    flags.push({
+      signal: 'FREE_EMAIL_PROVIDER',
+      severity: 'HIGH',
+      detail: 'Corporate recruiter using free email: ' + freeEmailDomains.join(', '),
+    });
   }
 
   dnsResults.forEach(dns => {
@@ -122,43 +128,54 @@ function buildQuickVerdict(domains, keywordResult, dnsResults) {
   else if (riskScore >= 31) verdict = 'YELLOW';
   else verdict = 'GREEN';
 
-  const needsDeepAI = fullScan === true || riskScore >= 40 || triggeredHigh.length >= 2;
+  const needsDeepAI = riskScore >= 40 || keywordResult.triggeredHigh.length >= 2;
 
-  return { verdict, riskScore, flags, needsDeepAI, verifiedDomains };
+  return { verdict, riskScore, flags, needsDeepAI, verifiedDomains, unknownDomains };
 }
 
 router.post('/', async (req, res) => {
   const { text, companyName, fullScan } = req.body;
 
   if (!text || typeof text !== 'string' || text.trim().length < 10) {
-    return res.status(400).json({ error: 'INVALID_INPUT', message: 'Text must be at least 10 characters.' });
+    return res.status(400).json({
+      error: 'INVALID_INPUT',
+      message: 'Text must be at least 10 characters.',
+    });
   }
 
   const trimmedText = text.slice(0, 3000);
   const domains = extractDomains(trimmedText);
   const keywordResult = runLocalKeywordScan(trimmedText);
 
-  const suspiciousDomains = domains.filter(d =>
-    !VERIFIED_EMPLOYERS.has(d) && !SCAM_DOMAINS.has(d)
-  ).slice(0, 2);
+  const suspiciousDomains = domains
+    .filter(d => !VERIFIED_EMPLOYERS.has(d) && !SCAM_DOMAINS.has(d))
+    .slice(0, 2);
 
   let dnsResults = [];
   if (suspiciousDomains.length > 0) {
     dnsResults = await Promise.all(
-      suspiciousDomains.map(d => auditDomain(d).catch(() => ({ domain: d, riskScore: 0, flags: [] })))
+      suspiciousDomains.map(d =>
+        auditDomain(d).catch(() => ({ domain: d, riskScore: 0, flags: [] }))
+      )
     );
   }
 
   const quickVerdict = buildQuickVerdict(domains, keywordResult, dnsResults);
 
+  const shouldRunAI = fullScan === true || quickVerdict.needsDeepAI;
+
   let deepAnalysis = null;
-  if (quickVerdict.needsDeepAI) {
+  if (shouldRunAI) {
     try {
+      const emailEntities = domains
+        .filter(d => SCAM_DOMAINS.has(d))
+        .map(d => ({ full: d, domain: d }));
       deepAnalysis = await analyzeWithGemini(
-        { urls: domains.filter(d => !SCAM_DOMAINS.has(d)), emails: [] },
+        { urls: domains.filter(d => !SCAM_DOMAINS.has(d)), emails: emailEntities },
         trimmedText
       );
-    } catch {
+    } catch (err) {
+      console.error('[QuickScan AI Error]', err.message);
       deepAnalysis = null;
     }
   }
@@ -177,12 +194,15 @@ router.post('/', async (req, res) => {
   const allFlags = [
     ...quickVerdict.flags,
     ...(deepAnalysis?.structuralDiscrepancies?.map(d => ({
-      signal: d.field, severity: d.severity, detail: d.finding,
+      signal: d.field,
+      severity: d.severity,
+      detail: d.finding,
     })) || []),
   ];
 
+  const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
   const topReasons = allFlags
-    .sort((a, b) => ({ CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }[a.severity] - { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }[b.severity]))
+    .sort((a, b) => (severityOrder[a.severity] ?? 4) - (severityOrder[b.severity] ?? 4))
     .slice(0, 4)
     .map(f => f.detail);
 

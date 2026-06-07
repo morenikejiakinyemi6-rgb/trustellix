@@ -556,9 +556,13 @@ function init() {
 
   addFloatingIndicator();
   setInterval(() => {
-  chrome.runtime.sendMessage({ type: 'PING' }, () => {
-    if (chrome.runtime.lastError) { /* service worker woke up */ }
-  });
+  try {
+    chrome.runtime.sendMessage({ type: 'PING' }, () => {
+      void chrome.runtime.lastError;
+    });
+  } catch (e) {
+    // context invalidated — extension was reloaded, ignore
+  }
 }, 25000);
 
   setTimeout(() => scanPage(cfgObj), 1200);
