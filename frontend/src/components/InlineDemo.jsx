@@ -1,10 +1,18 @@
 import { useState } from 'react';
 import { NAVY, BLUE_L, GREEN, ORANGE, RED, FONT } from '../constants/theme.js';
 
-const VERDICT_STYLES = {
-  GREEN:  { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46', dot: GREEN,  label: 'Safe' },
-  YELLOW: { bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412', dot: ORANGE, label: 'Proceed with Caution' },
-  RED:    { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', dot: RED,    label: 'High Risk Detected' },
+const VERDICT_CONFIG = {
+  LEGITIMATE: { verdict: 'GREEN', label: 'Safe', dot: GREEN, bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+  SUSPICIOUS:  { verdict: 'YELLOW', label: 'Caution', dot: ORANGE, bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412' },
+  HIGH_RISK:   { verdict: 'RED', label: 'High Risk', dot: RED, bg: '#FEF2F2', border: '#FECACA', text: '#991B1B' },
+  CONFIRMED_SCAM: { verdict: 'RED', label: 'Confirmed Scam', dot: RED, bg: '#FEF2F2', border: '#FECACA', text: '#991B1B' },
+};
+
+// Also handle quickscan-style verdicts
+const SCORE_CONFIG = (riskScore) => {
+  if (riskScore >= 61) return { label: 'High Risk', dot: RED, bg: '#FEF2F2', border: '#FECACA', text: '#991B1B' };
+  if (riskScore >= 31) return { label: 'Caution', dot: ORANGE, bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412' };
+  return { label: 'Safe', dot: GREEN, bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' };
 };
 
 export default function InlineDemo() {
@@ -21,10 +29,11 @@ export default function InlineDemo() {
     setResult(null);
     setError(null);
     try {
-      const res = await fetch('https://trustellix-backend.onrender.com/api/quickscan', {
+      // Always use /verify for consistent, detailed AI results
+      const res = await fetch('https://trustellix-backend.onrender.com/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, fullScan: true }),
+        body: JSON.stringify({ text }),
       });
       if (!res.ok) throw new Error('Server error');
       const data = await res.json();
@@ -37,15 +46,32 @@ export default function InlineDemo() {
 
   const reset = () => { setResult(null); setText(''); setError(null); };
 
-  const getVerdict = (riskScore) => {
-    if (riskScore >= 61) return 'RED';
-    if (riskScore >= 31) return 'YELLOW';
-    return 'GREEN';
-  };
+  // Parse result — /api/verify returns { analysis: {...}, extractedEntities: {...} }
+  let displayData = null;
+  if (result) {
+    const analysis = result.analysis || {};
+    const riskScore = analysis.riskScore ?? 0;
+    const verdictKey = analysis.verdict || 'LEGITIMATE';
+    const cfg = VERDICT_CONFIG[verdictKey] || SCORE_CONFIG(riskScore);
+    const safety = Math.max(0, 100 - riskScore);
+    const flags = analysis.structuralDiscrepancies || [];
+    const anomalies = analysis.operationalAnomalies || [];
+    const summary = analysis.executiveSummary || '';
 
-  const verdict = result ? getVerdict(result.riskScore) : null;
-  const safety = result ? Math.max(0, 100 - result.riskScore) : null;
-  const vc = verdict ? VERDICT_STYLES[verdict] : null;
+    // Build positive indicators from compliance values
+    const positives = [];
+    const cv = analysis.complianceValues || {};
+    if (cv.domainAgeRisk === 'LOW') positives.push('Domain appears established');
+    if (cv.emailAuthAlignment === 'ALIGNED') positives.push('Email domain matches company');
+    if (cv.brandImpersonationLikelihood === 'LOW') positives.push('No brand impersonation detected');
+    if (flags.length === 0 && anomalies.length === 0) positives.push('No structural issues found');
+    if (verdictKey === 'LEGITIMATE' && riskScore < 20) {
+      positives.push('Job description appears professional');
+      positives.push('Requirements are clear and specific');
+    }
+
+    displayData = { cfg, safety, riskScore, flags, anomalies, summary, positives, verdictKey };
+  }
 
   return (
     <div style={{
@@ -95,8 +121,7 @@ export default function InlineDemo() {
               fontWeight: '700', fontSize: '15px',
               cursor: isValid && !loading ? 'pointer' : 'not-allowed',
               fontFamily: FONT, transition: 'all 0.18s',
-              display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: '8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
             }}
           >
             {loading ? (
@@ -104,11 +129,10 @@ export default function InlineDemo() {
                 <div style={{
                   width: '16px', height: '16px',
                   border: '2px solid rgba(255,255,255,0.4)',
-                  borderTop: '2px solid white',
-                  borderRadius: '50%',
+                  borderTop: '2px solid white', borderRadius: '50%',
                   animation: 'tsxSpin 0.7s linear infinite',
                 }} />
-                Analyzing...
+                Analyzing with AI...
               </>
             ) : 'Run Free Analysis'}
           </button>
@@ -121,87 +145,139 @@ export default function InlineDemo() {
         </>
       )}
 
-      {result && vc && (
-        <div style={{
-          padding: '20px', borderRadius: '12px',
-          background: vc.bg, border: `1.5px solid ${vc.border}`,
-        }}>
+      {result && displayData && (
+        <div>
+          {/* Verdict header */}
           <div style={{
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between', marginBottom: '14px',
+            padding: '16px 18px', borderRadius: '12px',
+            background: displayData.cfg.bg,
+            border: `1.5px solid ${displayData.cfg.border}`,
+            marginBottom: '14px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '40px', height: '40px', borderRadius: '50%',
-                background: vc.dot, display: 'flex',
-                alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                {verdict === 'GREEN' && (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-                {verdict === 'YELLOW' && (
-                  <span style={{ color: 'white', fontWeight: '900', fontSize: '18px', lineHeight: 1 }}>!</span>
-                )}
-                {verdict === 'RED' && (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                )}
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', marginBottom: '8px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '50%',
+                  background: displayData.cfg.dot,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  {displayData.safety >= 70 ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <span style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>!</span>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '800', fontSize: '15px', color: displayData.cfg.text }}>
+                    {displayData.cfg.label}
+                  </div>
+                  <div style={{ fontSize: '11px', color: displayData.cfg.text, opacity: 0.7 }}>
+                    Trustellix AI Analysis
+                  </div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontWeight: '800', fontSize: '16px', color: vc.text }}>{vc.label}</div>
-                <div style={{ fontSize: '12px', color: vc.text, opacity: 0.7 }}>Trustellix Analysis</div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '28px', fontWeight: '900', color: displayData.cfg.dot, lineHeight: 1 }}>
+                  {displayData.safety}%
+                </div>
+                <div style={{ fontSize: '9px', color: displayData.cfg.text, opacity: 0.7, fontWeight: '700', letterSpacing: '0.06em' }}>
+                  SAFETY SCORE
+                </div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '30px', fontWeight: '900', color: vc.dot, lineHeight: 1 }}>
-                {safety}%
-              </div>
-              <div style={{
-                fontSize: '10px', color: vc.text, opacity: 0.7,
-                fontWeight: '700', letterSpacing: '0.06em',
-              }}>
-                SAFETY SCORE
-              </div>
-            </div>
+            {displayData.summary && (
+              <p style={{ fontSize: '13px', color: displayData.cfg.text, opacity: 0.85, margin: 0, lineHeight: '1.65' }}>
+                {displayData.summary}
+              </p>
+            )}
           </div>
 
-          {result.summary && (
-            <p style={{
-              fontSize: '13px', color: vc.text, opacity: 0.85,
-              margin: '0 0 12px', lineHeight: '1.65',
-            }}>
-              {result.summary.replace(/-/g, ' ')}
-            </p>
-          )}
-
-          {result.reasons?.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-              {result.reasons.slice(0, 3).map((r, i) => (
+          {/* Positive indicators */}
+          {displayData.positives.length > 0 && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{
+                fontSize: '10px', fontWeight: '700', color: '#065F46',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px',
+              }}>
+                <span style={{ color: GREEN }}>✓</span> Positive Indicators
+              </div>
+              {displayData.positives.map((p, i) => (
                 <div key={i} style={{
-                  display: 'flex', gap: '8px',
-                  fontSize: '12.5px', color: vc.text,
-                  opacity: 0.8, alignItems: 'flex-start',
+                  display: 'flex', gap: '8px', marginBottom: '5px',
+                  fontSize: '12.5px', color: '#065F46', alignItems: 'flex-start',
                 }}>
-                  <span style={{ flexShrink: 0, color: vc.dot, fontWeight: '700', marginTop: '2px' }}>•</span>
-                  <span>{r.replace(/-/g, ' ')}</span>
+                  <span style={{ color: GREEN, flexShrink: 0, fontWeight: '700' }}>●</span>
+                  <span>{p}</span>
                 </div>
               ))}
             </div>
           )}
 
-          <button
-            onClick={reset}
-            style={{
-              width: '100%', padding: '10px',
-              background: 'white', border: `1.5px solid ${vc.border}`,
-              borderRadius: '7px', fontSize: '14px',
-              fontWeight: '600', cursor: 'pointer',
-              color: vc.text, fontFamily: FONT,
-            }}
-          >
+          {/* Red flags */}
+          {(displayData.flags.length > 0 || displayData.anomalies.length > 0) && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{
+                fontSize: '10px', fontWeight: '700', color: '#991B1B',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px',
+              }}>
+                <span style={{ color: RED }}>⚑</span> Red Flags Detected
+              </div>
+              {displayData.flags.slice(0, 4).map((f, i) => (
+                <div key={i} style={{
+                  padding: '8px 12px', borderRadius: '6px',
+                  background: '#FEF2F2', border: '1px solid #FECACA',
+                  marginBottom: '6px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#991B1B' }}>{f.field}</span>
+                    <span style={{
+                      fontSize: '9px', fontWeight: '700', color: '#991B1B',
+                      background: '#FEE2E2', padding: '1px 6px', borderRadius: '3px',
+                      letterSpacing: '0.04em',
+                    }}>
+                      {f.severity}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#7F1D1D' }}>{f.finding}</div>
+                </div>
+              ))}
+              {displayData.anomalies.slice(0, 3).map((a, i) => (
+                <div key={`a${i}`} style={{
+                  display: 'flex', gap: '8px', marginBottom: '5px',
+                  fontSize: '12px', color: '#9A3412', alignItems: 'flex-start',
+                }}>
+                  <span style={{ color: ORANGE, flexShrink: 0 }}>●</span>
+                  <span>{a}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No flags message */}
+          {displayData.flags.length === 0 && displayData.anomalies.length === 0 && displayData.safety >= 80 && (
+            <div style={{
+              padding: '10px 14px', borderRadius: '8px',
+              background: '#F0FDF4', border: '1px solid #BBF7D0',
+              fontSize: '12.5px', color: '#065F46', marginBottom: '12px',
+            }}>
+              No structural issues, fee requests, or scam patterns detected in this posting.
+            </div>
+          )}
+
+          <button onClick={reset} style={{
+            width: '100%', padding: '10px',
+            background: 'white', border: '1.5px solid #E2E8F0',
+            borderRadius: '7px', fontSize: '14px',
+            fontWeight: '600', cursor: 'pointer',
+            color: '#374151', fontFamily: FONT,
+          }}>
             Scan Another
           </button>
         </div>
@@ -209,3 +285,4 @@ export default function InlineDemo() {
     </div>
   );
 }
+
