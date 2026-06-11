@@ -89,7 +89,6 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
   container.className = DETAIL_BADGE_CLASS;
   container.style.cssText = 'position:relative; display:inline-block; margin: 12px 0; vertical-align:middle; z-index:99999;';
 
-  // The small trigger pill that stays anchored inline
   const pill = document.createElement('div');
   pill.style.cssText = `
     display: inline-flex; align-items: center; gap: 6px;
@@ -102,7 +101,6 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
   pill.innerHTML = `${shieldSVG(c.dot, corrected)} <span>Trustellix: ${safety}% Safe</span>`;
   container.appendChild(pill);
 
-  // Hidden Detailed Forensic Hover Modal
   const modal = document.createElement('div');
   modal.style.cssText = `
     position: absolute; top: calc(100% + 6px); left: 0;
@@ -112,7 +110,6 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1E293B;
   `;
 
-  // Context Header
   let contentHtml = `
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #F1F5F9;">
       ${shieldSVG(c.dot, corrected)}
@@ -122,12 +119,10 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
     <div style="font-size:11px; color:#64748B; margin-bottom:8px; font-weight:600;">TARGET ENTITY: <span style="color:#1E293B; font-weight:800; text-transform:uppercase;">${companyName || 'Unknown Entity'}</span></div>
   `;
 
-  // Summary Statement Section
   if (summary) {
     contentHtml += `<p style="font-size:12px; color:${c.text}; opacity:0.95; margin:0 0 12px; line-height:1.5; background:${c.bg}; padding:10px; border-radius:6px; border-left: 3px solid ${c.dot};">${summary.replace(/-/g, ' ')}</p>`;
   }
 
-  // Inject Structural Indicators
   if (rawData && (rawData.structuralDiscrepancies?.length > 0 || rawData.operationalAnomalies?.length > 0)) {
     contentHtml += `<div style="font-size:9.5px; font-weight:700; color:#64748B; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:6px;">⚑ DETECTED THREAT SIGNALS</div>`;
     
@@ -153,7 +148,6 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
     });
     contentHtml += `</div>`;
   } else {
-    // Tailored legitimate indicator displaying company context
     contentHtml += `
       <div style="margin-bottom:8px; padding:8px; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:6px; display:flex; gap:6px; align-items:start;">
         <span style="color:#10B981; font-size:12px;">✓</span>
@@ -161,7 +155,6 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
       </div>`;
   }
 
-  // Footer Actions
   contentHtml += `
     <div style="margin-top:12px; padding-top:8px; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
       <span style="font-size:9px; color:#94A3B8; font-weight:600;">TRUSTELLIX ENGINE V1.0</span>
@@ -198,7 +191,7 @@ function createInteractiveBadge(verdict, riskScore, reasons, summary, companyNam
   return container;
 }
 
-// ─── FLOATING CONTROL ICON (RESTORED) ─────────────────────────────────────────
+// ─── FLOATING CONTROL ICON ────────────────────────────────────────────────────
 
 function addFloatingIndicator() {
   if (document.getElementById('tsx-float')) return;
@@ -281,7 +274,6 @@ async function callVerify(text, companyName) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(
       { type: 'SCAN_JOB', text, companyName, fullScan: true },
-      { id: 'tsx-call' },
       (res) => {
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
         if (!res) return reject(new Error('Payload collection dropped'));
@@ -315,7 +307,6 @@ async function scanDetailPage(siteObj) {
 
   document.querySelectorAll('.' + DETAIL_BADGE_CLASS).forEach(el => el.remove());
 
-  // Loading text element anchored locally
   const loading = document.createElement('div');
   loading.className = DETAIL_BADGE_CLASS;
   loading.style.cssText = `
@@ -340,7 +331,6 @@ async function scanDetailPage(siteObj) {
     const riskScore = data.riskScore ?? 0;
     const verdict = riskScore >= 61 ? 'RED' : riskScore >= 31 ? 'YELLOW' : 'GREEN';
 
-    // Map rich structured parameters cleanly for our forensic hover module
     const rawData = {
       structuralDiscrepancies: (data.reasons || []).map(r => ({ field: 'Audit Alert', finding: r, severity: riskScore >= 61 ? 'HIGH' : 'MEDIUM' })),
       operationalAnomalies: [],
@@ -370,7 +360,6 @@ function init() {
   const siteObj = getSiteConfig();
   if (!siteObj) return;
 
-  // Restore floating controls immediately
   addFloatingIndicator();
   setInterval(pingBackground, 25000);
 
