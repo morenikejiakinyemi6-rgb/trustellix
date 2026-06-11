@@ -14,7 +14,6 @@ function getConfigFromScore(riskScore) {
   return { label: 'Safe', dot: GREEN, bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' };
 }
 
-// Fixed: Now securely points to your Render backend to leverage your Groq key
 async function extractTextFromImage(base64Image) {
   const response = await fetch('https://trustellix-backend.onrender.com/api/extract-image', {
     method: 'POST',
@@ -35,7 +34,7 @@ export default function InlineDemo() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [activeTab, setActiveTab] = useState('text'); // 'text' or 'image'
+  const [activeTab, setActiveTab] = useState('text'); 
   const dropRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -95,7 +94,8 @@ export default function InlineDemo() {
       if (!res.ok) throw new Error('Server error');
       const data = await res.json();
       setResult(data);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError('Analysis failed. Please try again in a moment.');
     }
     setLoading(false);
@@ -105,21 +105,34 @@ export default function InlineDemo() {
 
   let displayData = null;
   if (result) {
-    const analysis = result.analysis || {};
+    // FIX: Fallback directly to result or result.data if result.analysis isn't present
+    const analysis = result.analysis || result.data || result || {};
     const riskScore = analysis.riskScore ?? 0;
     const verdictKey = analysis.verdict || 'LEGITIMATE';
     const cfg = VERDICT_CONFIG[verdictKey] || getConfigFromScore(riskScore);
     const safety = Math.max(0, 100 - riskScore);
-    const flags = analysis.structuralDiscrepancies || [];
+    
+    // Support variations in how reasons/flags are structured in payloads
+    const flags = analysis.structuralDiscrepancies || 
+                  (Array.isArray(analysis.reasons) && typeof analysis.reasons[0] === 'object' ? analysis.reasons : []) || 
+                  [];
     const anomalies = analysis.operationalAnomalies || [];
-    const summary = analysis.executiveSummary || '';
+    const summary = analysis.executiveSummary || analysis.summary || '';
     const cv = analysis.complianceValues || {};
+    
     const positives = [];
     if (cv.domainAgeRisk === 'LOW') positives.push('Domain appears well-established');
     if (cv.emailAuthAlignment === 'ALIGNED') positives.push('Email domain matches company');
     if (cv.brandImpersonationLikelihood === 'LOW' && riskScore < 40) positives.push('No brand impersonation patterns detected');
     if (flags.length === 0) positives.push('No structural red flags found in this posting');
-    if (riskScore < 20) positives.push('Job description is detailed and professional');
+    
+    // Handle string array fallback for reasons
+    if (Array.isArray(analysis.reasons) && typeof analysis.reasons[0] === 'string') {
+      analysis.reasons.forEach(r => positives.push(r));
+    }
+    
+    if (riskScore < 20 && positives.length === 0) positives.push('Job description is detailed and professional');
+    
     displayData = { cfg, safety, riskScore, flags, anomalies, summary, positives, verdictKey };
   }
 
@@ -136,7 +149,6 @@ export default function InlineDemo() {
 
       {!result && (
         <>
-          {/* Tabs */}
           <div style={{ display: 'flex', gap: '4px', marginBottom: '14px', background: '#F1F5F9', borderRadius: '8px', padding: '4px' }}>
             {[['text', 'Paste Text'], ['image', 'Screenshot / Image']].map(([tab, label]) => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
@@ -261,7 +273,6 @@ export default function InlineDemo() {
 
       {result && displayData && (
         <div>
-          {/* Verdict header */}
           <div style={{ padding: '16px 18px', borderRadius: '12px', background: displayData.cfg.bg, border: `1.5px solid ${displayData.cfg.border}`, marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: displayData.summary ? '10px' : '0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -287,11 +298,10 @@ export default function InlineDemo() {
             )}
           </div>
 
-          {/* Positive indicators */}
           {displayData.positives.length > 0 && (
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '10px', fontWeight: '700', color: '#065F46', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                ✓ Positive Indicators
+                ✓ Verification Details
               </div>
               {displayData.positives.map((p, i) => (
                 <div key={i} style={{ display: 'flex', gap: '7px', marginBottom: '4px', fontSize: '12.5px', color: '#065F46', alignItems: 'flex-start' }}>
@@ -301,7 +311,6 @@ export default function InlineDemo() {
             </div>
           )}
 
-          {/* Red flags */}
           {displayData.flags.length > 0 && (
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '10px', fontWeight: '700', color: '#991B1B', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
@@ -310,10 +319,10 @@ export default function InlineDemo() {
               {displayData.flags.slice(0, 4).map((f, i) => (
                 <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', background: '#FEF2F2', border: '1px solid #FECACA', marginBottom: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#991B1B' }}>{f.field}</span>
-                    <span style={{ fontSize: '9px', fontWeight: '700', color: '#991B1B', background: '#FEE2E2', padding: '1px 6px', borderRadius: '3px', letterSpacing: '0.04em' }}>{f.severity}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#991B1B' }}>{f.field || 'Threat Alert'}</span>
+                    <span style={{ fontSize: '9px', fontWeight: '700', color: '#991B1B', background: '#FEE2E2', padding: '1px 6px', borderRadius: '3px', letterSpacing: '0.04em' }}>{f.severity || 'HIGH'}</span>
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#7F1D1D' }}>{f.finding}</div>
+                  <div style={{ fontSize: '11.5px', color: '#7F1D1D' }}>{f.finding || JSON.stringify(f)}</div>
                 </div>
               ))}
             </div>

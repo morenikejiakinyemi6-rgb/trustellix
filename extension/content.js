@@ -46,7 +46,10 @@ const SITE_CONFIGS = {
   },
   'myjobmag.com': {
     isDetailPage: () => /\/job\//.test(location.href),
-    getTitle: () => document.querySelector('h1, h2.job-title')?.innerText.trim().split(' at ') || '',
+    getTitle: () => {
+      const txt = document.querySelector('h1, h2.job-title')?.innerText.trim();
+      return txt ? txt.split(' at ') : '';
+    },
     getCompany: () => {
       const m = document.querySelector('h1, h2')?.innerText.match(/ at (.+)$/i);
       return m ? m.trim() : document.querySelector('.company-name, .employer')?.innerText.trim() || '';
@@ -327,17 +330,12 @@ async function scanDetailPage(siteObj) {
 
     if (!result || !result.success) return;
 
+    // RESTORED: Clean mapping layout passing raw properties directly down to avoid nested schema breakage
     const data = result.data;
     const riskScore = data.riskScore ?? 0;
     const verdict = riskScore >= 61 ? 'RED' : riskScore >= 31 ? 'YELLOW' : 'GREEN';
 
-    const rawData = {
-      structuralDiscrepancies: (data.reasons || []).map(r => ({ field: 'Audit Alert', finding: r, severity: riskScore >= 61 ? 'HIGH' : 'MEDIUM' })),
-      operationalAnomalies: [],
-      complianceValues: { domainAgeRisk: 'UNKNOWN', emailAuthAlignment: 'NOT_APPLICABLE' }
-    };
-
-    const badge = createInteractiveBadge(verdict, riskScore, data.reasons || [], data.summary || '', company, rawData);
+    const badge = createInteractiveBadge(verdict, riskScore, data.reasons || [], data.summary || '', company, data);
     insertTarget.insertAdjacentElement('afterend', badge);
     updateFloatingIndicator(verdict);
 
