@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { NAVY, BLUE_L, GREEN, ORANGE, RED, FONT } from '../constants/theme.js';
 
 const VERDICT_CONFIG = {
-  LEGITIMATE:     { label: 'Safe',           dot: GREEN,  bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+  LEGITIMATE:     { label: 'Safe',         dot: GREEN,  bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
   SUSPICIOUS:     { label: 'Caution',        dot: ORANGE, bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412' },
   HIGH_RISK:      { label: 'High Risk',      dot: RED,    bg: '#FEF2F2', border: '#FECACA', text: '#991B1B' },
   CONFIRMED_SCAM: { label: 'Confirmed Scam', dot: RED,    bg: '#FEF2F2', border: '#FECACA', text: '#991B1B' },
@@ -14,30 +14,17 @@ function getConfigFromScore(riskScore) {
   return { label: 'Safe', dot: GREEN, bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' };
 }
 
+// Fixed: Now securely points to your Render backend to leverage your Groq key
 async function extractTextFromImage(base64Image) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch('https://trustellix-backend.onrender.com/api/extract-image', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: base64Image },
-          },
-          {
-            type: 'text',
-            text: 'Extract all text from this job posting screenshot. Include: job title, company name, location, salary, job description, requirements, contact details, and any other visible text. Return the extracted text only, preserving the structure.',
-          },
-        ],
-      }],
-    }),
+    body: JSON.stringify({ image: base64Image }),
   });
+  
+  if (!response.ok) throw new Error('Extraction route failed');
   const data = await response.json();
-  if (data.content && data.content[0]) return data.content[0].text;
+  if (data.text) return data.text;
   throw new Error('Could not extract text from image');
 }
 

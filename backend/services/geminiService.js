@@ -2,7 +2,7 @@ import Groq from 'groq-sdk';
 
 const SYSTEM_PROMPT = `You are Trustellix, a forensic AI protecting Nigerian graduates from job scams. You must use the ACTUAL COMPANY NAME and SPECIFIC DETAILS from the job text in every finding. Never write generic findings like "No company website mentioned" — always write "CompanyName does not mention a website" or "CompanyName uses gmail.com instead of a corporate email domain".
 
-Return ONLY valid JSON:
+Return ONLY a single valid JSON object wrapper. Do not include markdown formatting or extra text.
 {
   "verdict": "LEGITIMATE" | "SUSPICIOUS" | "HIGH_RISK" | "CONFIRMED_SCAM",
   "riskScore": <number 0-100>,
@@ -28,7 +28,7 @@ SPECIFICITY RULES — ALWAYS:
 CRITICAL SCAM SIGNALS (+30 each):
 - BVN, NIN, passport requested before offer letter
 - Telegram/WhatsApp interview
-- Processing/training/registration fee required  
+- Processing/training/registration fee required   
 - Free email (gmail/yahoo/hotmail) for corporate recruitment
 - Company name is misspelling of major brand
 
@@ -72,20 +72,22 @@ function getClient() {
 export async function analyzeWithGemini(extractedEntities, rawText) {
   const client = getClient();
 
-  const userPrompt = `EXTRACTED FROM TEXT:
-- Domains/URLs found: ${JSON.stringify(extractedEntities.urls)}
-- Email addresses: ${JSON.stringify(extractedEntities.emails)}
+  // If the rawText comes from the extension, it contains structured markers.
+  // We explicitly guide the model to process this metadata structure safely.
+  const userPrompt = `EXTRACTED ENTITIES FROM SYSTEM SCRIPT:
+- Domains/URLs found: ${JSON.stringify(extractedEntities.urls || [])}
+- Email addresses: ${JSON.stringify(extractedEntities.emails || [])}
 
-JOB POSTING:
+JOB POSTING CONTENT (MAY CONTAIN STRATEGIC METADATA BLOCKS):
 ---
 ${rawText.slice(0, 4000)}
 ---
 
-IMPORTANT: 
-1. Extract the company name from the text and USE IT in every finding
-2. Be specific to THIS job posting — reference actual salary numbers, role title, company name
-3. Do not flag things that are not red flags (no registration number = normal)
-4. Return ONLY the JSON`;
+IMPORTANT DIRECTIONS:
+1. Look for COMPANY_CONTEXT and POSITION_TITLE inside the text block if present to identify the target firm. Use that exact company name in every array finding.
+2. Be highly specific to THIS job posting — reference actual salary numbers, role title, and company name.
+3. Do not flag things that are not red flags (missing corporate registration number is normal).
+4. Return ONLY raw executable JSON fitting the structure template. No conversational prose filler.`;
 
   const completion = await client.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
@@ -97,5 +99,16 @@ IMPORTANT:
     temperature: 0.1,
   });
 
-  return JSON.parse(completion.choices[0].message.content);
+  const rawOutput = completion.choices.message.content.trim();
+  
+  try {
+    return JSON.parse(rawOutput);
+  } catch (error) {
+    // Fail-safe: clean up markdown backticks if Llama wrapped the JSON response
+    const jsonMatch = rawOutput.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch);
+    }
+    throw error;
+  }
 }
